@@ -1508,7 +1508,7 @@ function addXP(n){S.xp+=n;S.dailyDone=Math.min(S.dailyDone+1,S.dailyGoal);saveSt
 
 let currentView='home';
 function navigate(view){currentView=view;document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===view));renderView(view);}
-function renderView(view){const el=document.getElementById('views');el.scrollTop=0;switch(view){case 'home':el.innerHTML=renderHome();break;case 'vocab':el.innerHTML=renderVocabSetup();afterVocabSetup();break;case 'grammar':el.innerHTML=renderGrammar();break;case 'translate':el.innerHTML=renderTranslate();afterTranslate();break;case 'speech':el.innerHTML=renderSpeech();afterSpeech();break;case 'settings':el.innerHTML=renderSettings();break;}}
+function renderView(view){const el=document.getElementById('views');el.scrollTop=0;switch(view){case 'home':el.innerHTML=renderHome();break;case 'vocab':el.innerHTML=renderVocabSetup();afterVocabSetup();break;case 'grammar':el.innerHTML=renderGrammar();break;case 'translate':el.innerHTML=renderTranslate();afterTranslate();break;case 'speech':el.innerHTML=renderSpeech();afterSpeech();break;case 'settings':el.innerHTML=renderSettings();afterSettings();break;}}
 
 function openLangModal(){
   openModal(`<div class="modal-title">${t('ui_lang')}</div>${['de','en','ru'].map(lc=>`<div onclick="setUiLang('${lc}')" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;cursor:pointer;background:${S.uiLang===lc?'var(--primary-xlight)':'transparent'};border:${S.uiLang===lc?'1.5px solid var(--border2)':'1.5px solid transparent'};margin-bottom:8px"><span style="font-size:26px">${flag(lc)}</span><div><div style="font-size:15px;font-weight:800;color:${S.uiLang===lc?'var(--primary)':'var(--text)'}">${LANGS[lc].label[S.uiLang]}</div><div style="font-size:12px;color:var(--text3);font-weight:600">${LANGS[lc].label[lc]}</div></div>${S.uiLang===lc?'<div style="margin-left:auto;color:var(--accent);font-size:18px">&#10003;</div>':''}</div>`).join('')}<button class="btn btn-ghost btn-full" style="margin-top:6px" onclick="forceCloseModal()">${t('cancel')}</button>`);
@@ -1736,63 +1736,88 @@ function toggleRec(){
   recognition.start();
 }
 
+function buildKeySection(){
+  if(S.aiProvider==='gemini'){
+    return '<div class="input-label" style="display:flex;align-items:center;gap:6px"><span style="color:#4285F4;font-weight:900">G</span>&nbsp;Gemini API-Schlüssel</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Kostenlos unter <strong>aistudio.google.com</strong></div>'
+      +'<div class="api-key-wrap"><input class="inp" type="password" id="set-gk" placeholder="AIza\u2026" autocomplete="off"><button class="key-visible-btn" onclick="toggleKV(\'set-gk\')">&#x1F441;</button></div>'
+      +'<button class="btn btn-accent btn-sm" style="margin-top:8px;width:auto" onclick="saveGK()">&#x2713; Speichern</button>';
+  }
+  return '<div class="input-label" style="display:flex;align-items:center;gap:6px"><span style="color:var(--primary);font-size:16px">&#x25CB;</span>&nbsp;Claude API-Schlüssel</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Unter <strong>console.anthropic.com</strong></div>'
+    +'<div class="api-key-wrap"><input class="inp" type="password" id="set-ck" placeholder="sk-ant-\u2026" autocomplete="off"><button class="key-visible-btn" onclick="toggleKV(\'set-ck\')">&#x1F441;</button></div>'
+    +'<button class="btn btn-primary btn-sm" style="margin-top:8px;width:auto" onclick="saveCK()">&#x2713; Speichern</button>';
+}
+function buildProviderCards(){
+  return ['claude','gemini'].map(function(pid){
+    var active=S.aiProvider===pid;
+    var label=pid==='claude'?'Claude':'Gemini';
+    var sub=pid==='claude'?'Anthropic \u00b7 Sonnet 4.6':'Google \u00b7 Gemini 2.0 Flash';
+    var border=active?'var(--primary)':'var(--border)';
+    var bg=active?'var(--primary-xlight)':'var(--surface)';
+    var col=active?'var(--primary)':'var(--text)';
+    var badge=active?'<div style="margin-top:6px;font-size:10px;background:var(--primary);color:#fff;border-radius:6px;padding:2px 8px;display:inline-block;font-weight:800">AKTIV</div>':'';
+    return '<div class="card" style="cursor:pointer;border:2px solid '+border+';background:'+bg+';text-align:center;padding:14px 10px;flex:1" onclick="setAIProvider(\''+pid+'\')">'
+      +'<div style="font-size:22px;margin-bottom:4px">'+(pid==='claude'?'&#x1F9E0;':'&#x2728;')+'</div>'
+      +'<div style="font-size:14px;font-weight:900;color:'+col+'">'+label+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:3px">'+sub+'</div>'
+      +badge+'</div>';
+  }).join('');
+}
 function renderSettings(){
-  const L=['de','en','ru'],LV=['A1','A2','B1','B2','C1','C2'];
-  const isGemini=S.aiProvider==='gemini';
-  const providerCards=[
-    {id:'claude',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>',label:'Claude',sub:'Anthropic · claude-sonnet-4-6'},
-    {id:'gemini',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',label:'Gemini',sub:'Google · gemini-2.0-flash'}
-  ];
-  return `<div class="view"><div class="view-title">${t('settings_title')}</div>
+  var L=['de','en','ru'],LV=['A1','A2','B1','B2','C1','C2'];
+  var langOpts=L.map(function(l){return '<option value="'+l+'"'+(S.uiLang===l?' selected':'')+'>'+flag(l)+' '+LANGS[l].label[S.uiLang]+'</option>';}).join('');
+  var fromOpts=L.map(function(l){return '<option value="'+l+'"'+(S.learnFrom===l?' selected':'')+'>'+flag(l)+' '+langLabel(l)+'</option>';}).join('');
+  var toOpts=L.map(function(l){return '<option value="'+l+'"'+(S.learnTo===l?' selected':'')+'>'+flag(l)+' '+langLabel(l)+'</option>';}).join('');
+  var lvOpts=LV.map(function(lv){return '<option value="'+lv+'"'+(S.level===lv?' selected':'')+'>'+lv+'</option>';}).join('');
+  return '<div class="view">'
+    +'<div class="view-title">'+t('settings_title')+'</div>'
 
-    <div class="settings-section"><div class="settings-section-title">&#x1F30D; ${t('learndir')}</div><div class="card">
-      <div class="input-group"><label class="input-label">${t('ui_lang')}</label><select class="inp" onchange="applyUILang(this.value)">${L.map(l=>`<option value="${l}" ${S.uiLang===l?'selected':''}>${flag(l)} ${LANGS[l].label[S.uiLang]}</option>`).join('')}</select></div>
-      <div class="input-group"><label class="input-label">${t('learn_from')}</label><select class="inp" onchange="S.learnFrom=this.value;saveState()">${L.map(l=>`<option value="${l}" ${S.learnFrom===l?'selected':''}>${flag(l)} ${langLabel(l)}</option>`).join('')}</select></div>
-      <div class="input-group"><label class="input-label">${t('learn_to')}</label><select class="inp" onchange="S.learnTo=this.value;saveState()">${L.map(l=>`<option value="${l}" ${S.learnTo===l?'selected':''}>${flag(l)} ${langLabel(l)}</option>`).join('')}</select></div>
-      <div class="input-group" style="margin-bottom:0"><label class="input-label">${t('level_select')}</label><select class="inp" onchange="S.level=this.value;saveState()">${LV.map(lv=>`<option value="${lv}" ${S.level===lv?'selected':''}>${lv}</option>`).join('')}</select></div>
-    </div></div>
+    +'<div class="settings-section"><div class="settings-section-title">&#x1F30D; '+t('learndir')+'</div><div class="card">'
+    +'<div class="input-group"><label class="input-label">'+t('ui_lang')+'</label><select class="inp" onchange="applyUILang(this.value)">'+langOpts+'</select></div>'
+    +'<div class="input-group"><label class="input-label">'+t('learn_from')+'</label><select class="inp" onchange="S.learnFrom=this.value;saveState()">'+fromOpts+'</select></div>'
+    +'<div class="input-group"><label class="input-label">'+t('learn_to')+'</label><select class="inp" onchange="S.learnTo=this.value;saveState()">'+toOpts+'</select></div>'
+    +'<div class="input-group" style="margin-bottom:0"><label class="input-label">'+t('level_select')+'</label><select class="inp" onchange="S.level=this.value;saveState()">'+lvOpts+'</select></div>'
+    +'</div></div>'
 
-    <div class="settings-section"><div class="settings-section-title">&#x1F916; KI-Anbieter</div>
-      <div class="row" style="margin-bottom:14px">${providerCards.map(p=>{const active=S.aiProvider===p.id;return`<div class="card" style="cursor:pointer;border:2px solid ${active?'var(--primary)':'var(--border)'};background:${active?'var(--primary-xlight)':'var(--surface)'};text-align:center;padding:14px 10px" onclick="setAIProvider('${p.id}')"><div style="color:${active?'var(--primary)':'var(--text3)'};display:flex;justify-content:center;margin-bottom:6px">${p.icon}</div><div style="font-size:14px;font-weight:900;color:${active?'var(--primary)':'var(--text)'}">${p.label}</div><div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:3px">${p.sub}</div>${active?`<div style="margin-top:6px;font-size:10px;background:var(--primary);color:#fff;border-radius:6px;padding:2px 8px;display:inline-block;font-weight:800">AKTIV</div>`:''}</div>`;}).join('')}</div>
+    +'<div class="settings-section"><div class="settings-section-title">&#x1F916; KI-Anbieter</div>'
+    +'<div class="row" style="margin-bottom:14px">'+buildProviderCards()+'</div>'
+    +'<div class="card">'+buildKeySection()
+    +'<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px"></div>'
+    +'<div class="input-label">&#x1F535; '+t('deepl_key')+' <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div>'
+    +'<div class="api-key-wrap"><input class="inp" type="password" id="set-dk" placeholder="xxxxxxxx:fx" autocomplete="off"><button class="key-visible-btn" onclick="toggleKV(\'set-dk\')">&#x1F441;</button></div>'
+    +'<button class="btn btn-ghost btn-sm" style="margin-top:8px;width:auto" onclick="saveDK()">&#x2713; '+t('save')+'</button>'
+    +'</div></div>'
 
-      <div class="card">
-        ${isGemini?`
-        <div class="input-label" style="display:flex;align-items:center;gap:6px"><span style="color:#4285F4;font-weight:900">G</span> Gemini API-Schlüssel</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Kostenlos unter <strong>aistudio.google.com</strong></div>
-        <div class="api-key-wrap"><input class="inp" type="password" id="set-gk" value="${S.geminiKey}" placeholder="AIza\u2026"><button class="key-visible-btn" onclick="toggleKV('set-gk')">&#x1F441;</button></div>
-        <button class="btn btn-accent btn-sm" style="margin-top:8px;width:auto" onclick="saveGK()">&#x2713; ${t('save')}</button>
-        `:
-        `<div class="input-label" style="display:flex;align-items:center;gap:6px"><span style="color:var(--primary);font-size:16px">&#x25CB;</span> ${t('claude_key')}</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Unter <strong>console.anthropic.com</strong></div>
-        <div class="api-key-wrap"><input class="inp" type="password" id="set-ck" value="${S.claudeKey}" placeholder="sk-ant-\u2026"><button class="key-visible-btn" onclick="toggleKV('set-ck')">&#x1F441;</button></div>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:auto" onclick="saveCK()">&#x2713; ${t('save')}</button>`}
-        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px"></div>
-        <div class="input-label">&#x1F535; ${t('deepl_key')} <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div>
-        <div class="api-key-wrap"><input class="inp" type="password" id="set-dk" value="${S.deeplKey}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx"><button class="key-visible-btn" onclick="toggleKV('set-dk')">&#x1F441;</button></div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:auto" onclick="saveDK()">&#x2713; ${t('save')}</button>
-      </div>
-    </div>
+    +'<div class="settings-section"><div class="settings-section-title">&#x1F50A; '+t('spd')+'</div><div class="card">'
+    +'<div class="slider-wrap"><span class="slider-label">'+t('slow')+'</span><input type="range" min="0.5" max="2.0" step="0.1" value="'+S.speechRate+'" oninput="S.speechRate=parseFloat(this.value);saveState();document.getElementById(\'spd-v\').textContent=parseFloat(this.value).toFixed(1)+\'x\'"><span class="slider-label">'+t('fast')+'</span></div>'
+    +'<div style="text-align:center;margin-top:6px;font-size:14px;font-weight:800;color:var(--primary)" id="spd-v">'+S.speechRate.toFixed(1)+'x</div>'
+    +'<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="speakWord(\'Hallo, ich bin Semanteq!\',\'de\')">&#x1F50A; Test</button>'
+    +'</div></div>'
 
-    <div class="settings-section"><div class="settings-section-title">&#x1F50A; ${t('spd')}</div><div class="card">
-      <div class="slider-wrap"><span class="slider-label">${t('slow')}</span><input type="range" min="0.5" max="2.0" step="0.1" value="${S.speechRate}" oninput="S.speechRate=parseFloat(this.value);saveState();document.getElementById('spd-v').textContent=parseFloat(this.value).toFixed(1)+'x'"><span class="slider-label">${t('fast')}</span></div>
-      <div style="text-align:center;margin-top:6px;font-size:14px;font-weight:800;color:var(--primary)" id="spd-v">${S.speechRate.toFixed(1)}x</div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="speakWord('Hallo, ich bin Semanteq!','de')">&#x1F50A; Test</button>
-    </div></div>
+    +'<div class="settings-section"><div class="settings-section-title">&#x2699;&#xFE0F; App</div><div class="card">'
+    +'<div class="settings-row"><div><div class="settings-row-label">&#x1F504; '+t('chk_upd')+'</div><div class="settings-row-sub">'+t('version')+' '+BUILD.version+' &middot; '+BUILD.date+'</div></div><button class="btn btn-ghost btn-sm" onclick="hardRefresh()">Update</button></div>'
+    +'<div class="settings-row"><div><div class="settings-row-label">'+t('reset_prog')+'</div><div class="settings-row-sub">XP &middot; Streak &middot; Fortschritt</div></div><button class="btn btn-danger btn-sm" onclick="confirmReset()">&#x1F5D1;</button></div>'
+    +'</div></div>'
 
-    <div class="settings-section"><div class="settings-section-title">&#x2699;&#xFE0F; App</div><div class="card">
-      <div class="settings-row"><div><div class="settings-row-label">&#x1F504; ${t('chk_upd')}</div><div class="settings-row-sub">${t('version')} ${BUILD.version} &nbsp;&middot;&nbsp; ${BUILD.date}</div></div><button class="btn btn-ghost btn-sm" onclick="hardRefresh()">Update</button></div>
-      <div class="settings-row"><div><div class="settings-row-label">${t('reset_prog')}</div><div class="settings-row-sub">XP &middot; Streak &middot; Fortschritt</div></div><button class="btn btn-danger btn-sm" onclick="confirmReset()">&#x1F5D1;</button></div>
-    </div></div>
-
-    <div class="app-footer">${BUILD.dev}<br>${t('version')} ${BUILD.version} &nbsp;&middot;&nbsp; ${BUILD.date}<br>${VOCAB.length} W\u00f6rter &middot; ${Object.keys(TOPIC_LABELS).length} Themen &middot; KI: ${S.aiProvider==='gemini'?'Gemini 2.0 Flash':'Claude Sonnet 4.6'}</div>
-  </div>`;
+    +'<div class="app-footer">'+BUILD.dev+'<br>'+t('version')+' '+BUILD.version+' &middot; '+BUILD.date+'<br>'+VOCAB.length+' W\u00f6rter &middot; '+(S.aiProvider==='gemini'?'Gemini 2.0 Flash':'Claude Sonnet 4.6')+'</div>'
+    +'</div>';
 }
 function setAIProvider(p){S.aiProvider=p;saveState();renderView('settings');}
-function saveGK(){S.geminiKey=document.getElementById('set-gk')?.value||'';saveState();showToast(t('saved'));}
-function hardRefresh(){showToast('Lade neu \u2026');setTimeout(()=>{const url=location.href.split('?')[0]+'?v='+Date.now();location.replace(url);},400);}
-function toggleKV(id){const i=document.getElementById(id);if(i)i.type=i.type==='password'?'text':'password';}
-function saveCK(){S.claudeKey=document.getElementById('set-ck')?.value||'';saveState();showToast(t('saved'));}
-function saveDK(){S.deeplKey=document.getElementById('set-dk')?.value||'';saveState();showToast(t('saved'));}
+function saveGK(){
+  var el=document.getElementById('set-gk');
+  if(!el){showToast('Feld nicht gefunden');return;}
+  S.geminiKey=el.value.trim();saveState();showToast(t('saved'));
+}
+function hardRefresh(){showToast('Lade neu \u2026');setTimeout(function(){location.replace(location.href.split('?')[0]+'?v='+Date.now());},400);}
+function toggleKV(id){var i=document.getElementById(id);if(i)i.type=i.type==='password'?'text':'password';}
+function saveCK(){var el=document.getElementById('set-ck');if(!el){showToast('Feld nicht gefunden');return;}S.claudeKey=el.value.trim();saveState();showToast(t('saved'));}
+function saveDK(){var el=document.getElementById('set-dk');if(!el){showToast('Feld nicht gefunden');return;}S.deeplKey=el.value.trim();saveState();showToast(t('saved'));}
+function afterSettings(){
+  var ck=document.getElementById('set-ck');if(ck&&S.claudeKey)ck.value=S.claudeKey;
+  var gk=document.getElementById('set-gk');if(gk&&S.geminiKey)gk.value=S.geminiKey;
+  var dk=document.getElementById('set-dk');if(dk&&S.deeplKey)dk.value=S.deeplKey;
+}
 function applyUILang(lc){S.uiLang=lc;saveState();updateI18n();renderView('settings');}
 function confirmReset(){openModal(`<div class="modal-title">&#x26A0;&#xFE0F; ${t('confirm_reset')}</div><div style="color:var(--text3);font-size:14px;margin-bottom:8px">XP: ${S.xp} \u00b7 Streak: ${S.streak}</div><div class="modal-actions"><button class="btn btn-ghost" onclick="forceCloseModal()">${t('cancel')}</button><button class="btn btn-danger" onclick="doReset()">${t('yes')}</button></div>`);}
 function doReset(){S.progress={};S.xp=0;S.streak=0;S.dailyDone=0;S.chatMessages=[];saveState();forceCloseModal();showToast('Reset &#x2713;');navigate('home');}
