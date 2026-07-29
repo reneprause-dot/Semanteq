@@ -29,8 +29,8 @@ button{cursor:pointer;font-family:var(--font);border:none;outline:none}
 input,textarea,select{font-family:var(--font);outline:none}
 #app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:var(--surface);box-shadow:0 0 60px rgba(27,106,240,.12)}
 #topbar{height:var(--top-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
-#views{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+12px);-webkit-overflow-scrolling:touch}
-#bottomnav{height:var(--nav-h);display:flex;align-items:center;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;padding:0 2px}
+#views{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+16px);-webkit-overflow-scrolling:touch;min-height:0}
+#bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);display:flex;align-items:center;background:var(--surface);border-top:1px solid var(--border);padding:0 2px;z-index:50;box-shadow:0 -2px 12px rgba(27,106,240,.08)}
 
 /* LOGO */
 .logo{display:flex;align-items:center;gap:10px}
