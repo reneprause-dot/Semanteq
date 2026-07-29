@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1B6AF0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Semanteq">
+<title>Semanteq – Language Learning App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1B6AF0;--primary-dark:#1255CC;--primary-light:#5B9AFF;--primary-xlight:#EEF5FF;
+  --accent:#3DD68C;--accent-dark:#28BB72;--accent-light:#E0FAF0;
+  --success:#3DD68C;--success-light:#E0FAF0;
+  --warning:#F59E0B;--warning-light:#FEF3C7;
+  --danger:#EF4444;--danger-light:#FEE2E2;
+  --bg:#EDF5FF;--surface:#FFFFFF;--surface2:#F4F8FF;--surface3:#EEF5FF;
+  --text:#0C1A3D;--text2:#3A4F7A;--text3:#7A90BE;
+  --border:#D0E0FF;--border2:#A8C4FF;
+  --radius:18px;--radius-sm:10px;--radius-xs:6px;
+  --shadow:0 4px 24px rgba(27,106,240,.1);--shadow-md:0 8px 32px rgba(27,106,240,.14);--shadow-lg:0 16px 48px rgba(27,106,240,.18);
+  --nav-h:70px;--top-h:64px;--font:'Nunito',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--bg);color:var(--text)}
+button{cursor:pointer;font-family:var(--font);border:none;outline:none}
+input,textarea,select{font-family:var(--font);outline:none}
+#app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:var(--surface);box-shadow:0 0 60px rgba(27,106,240,.12)}
+#topbar{height:var(--top-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
+#views{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+12px);-webkit-overflow-scrolling:touch}
+#bottomnav{height:var(--nav-h);display:flex;align-items:center;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;padding:0 2px}
+
+/* LOGO */
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;flex-shrink:0}
+.logo-wordmark{display:flex;flex-direction:column;gap:0}
+.logo-name{font-size:18px;font-weight:900;color:var(--text);letter-spacing:.5px;line-height:1}
+.logo-name span{color:var(--accent)}
+.logo-tagline{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;line-height:1;margin-top:2px}
+.lang-pill{display:flex;align-items:center;gap:4px;background:var(--primary-xlight);border:1.5px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:800;color:var(--primary);cursor:pointer;transition:.2s}
+.lang-pill:active{transform:scale(.96)}
+
+/* NAV */
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:12px;cursor:pointer;flex:1;background:none;color:var(--text3);font-size:9.5px;font-weight:800;position:relative;transition:.15s}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:.15s}
+.nav-item.active{color:var(--primary)}
+.nav-item.active svg{stroke:var(--primary)}
+.nav-item.active::before{content:'';position:absolute;top:3px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px}
+
+/* VIEWS */
+.view{padding:20px 16px;animation:fadeSlide .28s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.view-title{font-size:22px;font-weight:900;color:var(--text);margin-bottom:4px}
+.view-sub{font-size:14px;color:var(--text3);margin-bottom:20px;font-weight:600}
+.section-label{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+
+/* CARDS */
+.card{background:var(--surface);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card+.card,.card+.row,.row+.card{margin-top:14px}
+.row{display:flex;gap:12px}.row .card{flex:1}
+
+/* STATS */
+.stat-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 10px;text-align:center;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface)}
+.stat-val{font-size:24px;font-weight:900;color:var(--primary);line-height:1}
+.stat-lbl{font-size:11px;font-weight:700;color:var(--text3);margin-top:4px}
+.stat-icon{font-size:18px;margin-bottom:5px}
+.ring-svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:8}
+.ring-fg{fill:none;stroke:url(#ringGrad);stroke-width:8;stroke-linecap:round;stroke-dasharray:220}
+.ring-text{font-size:17px;font-weight:900;fill:var(--primary)}
+.ring-sub{font-size:9px;fill:var(--text3);font-weight:700;font-family:var(--font)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 20px;border-radius:14px;font-size:15px;font-weight:700;transition:.18s;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 18px rgba(27,106,240,.35)}
+.btn-accent{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;box-shadow:0 4px 18px rgba(61,214,140,.35)}
+.btn-ghost{background:var(--primary-xlight);color:var(--primary);border:1.5px solid var(--border2)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:9px 16px;font-size:13px;border-radius:10px}
+.btn-full{width:100%}
+
+/* INPUTS */
+.input-group{margin-bottom:14px}
+.input-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
+.inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:600;color:var(--text);background:var(--surface2);transition:.2s}
+.inp:focus{border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 3px rgba(27,106,240,.12)}
+textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
+select.inp{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231B6AF0' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.slider-wrap{display:flex;align-items:center;gap:12px}
+.slider-label{font-size:12px;font-weight:700;color:var(--text3);white-space:nowrap}
+input[type=range]{-webkit-appearance:none;flex:1;height:6px;background:var(--border);border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;background:var(--primary);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(27,106,240,.3)}
+
+/* TABS */
+.tabs{display:flex;background:var(--surface2);border-radius:12px;padding:4px;gap:3px;margin-bottom:16px}
+.tab{flex:1;padding:8px;border-radius:9px;font-size:13px;font-weight:700;color:var(--text3);background:none;text-align:center;cursor:pointer;transition:.18s}
+.tab.active{background:var(--surface);color:var(--primary);box-shadow:var(--shadow)}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.chip{padding:7px 13px;border-radius:20px;font-size:12.5px;font-weight:700;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:.15s}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.chip:active{transform:scale(.95)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800}
+.badge-A1,.badge-A2{background:#E0F9EE;color:#0D7A50}
+.badge-B1,.badge-B2{background:#E0EEFF;color:#1255CC}
+.badge-C1,.badge-C2{background:#F0E8FF;color:#6B21CC}
+
+/* FLASHCARD */
+#fc-scene{perspective:1000px;margin:8px auto;width:100%;max-width:360px;height:210px}
+.fc-card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);cursor:pointer}
+.fc-card.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;border:1px solid var(--border);box-shadow:var(--shadow-md)}
+.fc-front{background:linear-gradient(135deg,var(--primary) 0%,#0A3AA0 100%);color:#fff}
+.fc-back{background:var(--surface);transform:rotateY(180deg)}
+.fc-word{font-size:27px;font-weight:900;text-align:center;line-height:1.2}
+.fc-hint{font-size:13px;opacity:.7;margin-top:8px;font-weight:600}
+.fc-topic{font-size:11px;font-weight:800;text-transform:uppercase;opacity:.65;margin-bottom:8px;letter-spacing:.5px}
+.fc-actions{display:flex;gap:10px;margin-top:16px;justify-content:center}
+.fc-btn{flex:1;max-width:150px;padding:12px;border-radius:14px;font-size:14px;font-weight:800;text-align:center;cursor:pointer;transition:.18s}
+.fc-btn:active{transform:scale(.96)}
+.fc-btn-wrong{background:var(--danger-light);color:var(--danger);border:1.5px solid var(--danger)}
+.fc-btn-right{background:var(--success-light);color:var(--success);border:1.5px solid var(--success)}
+.fc-progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.fc-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .3s}
+.fc-counter{font-size:13px;font-weight:700;color:var(--text3);text-align:center;margin-bottom:8px}
+
+/* QUIZ */
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.quiz-opt{padding:14px;border-radius:14px;font-size:13px;font-weight:700;border:2px solid var(--border);background:var(--surface2);color:var(--text);text-align:center;cursor:pointer;transition:.18s;line-height:1.3}
+.quiz-opt:active{transform:scale(.97)}
+.quiz-opt.correct{background:var(--success-light);border-color:var(--success);color:#0D7A50}
+.quiz-opt.wrong{background:var(--danger-light);border-color:var(--danger);color:var(--danger)}
+
+/* TRANSLATE */
+.lang-switch{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.lang-select-wrap{flex:1}
+.swap-btn{width:40px;height:40px;border-radius:12px;background:var(--primary-xlight);color:var(--primary);font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;border:1.5px solid var(--border2);transition:.2s}
+.swap-btn:active{transform:rotate(180deg) scale(.95)}
+.translation-box{background:linear-gradient(135deg,var(--primary-xlight),#E0EEFF);border:1.5px solid var(--border2);border-radius:var(--radius);padding:18px;margin-top:14px;min-height:80px;position:relative}
+.translation-text{font-size:18px;font-weight:700;line-height:1.5;color:var(--text)}
+.provider-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text3);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 8px;margin-top:10px}
+.copy-btn{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.tts-btn{width:32px;height:32px;border-radius:8px;background:var(--accent-light);border:1.5px solid var(--accent);color:var(--accent-dark);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* CHAT */
+.chat-messages{display:flex;flex-direction:column;gap:12px;margin-bottom:14px;min-height:180px}
+.msg{display:flex;gap:10px;align-items:flex-start}
+.msg.user{flex-direction:row-reverse}
+.msg-avatar{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:800}
+.msg-avatar.ai{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff}
+.msg-avatar.user{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff}
+.msg-bubble{max-width:80%;padding:12px 14px;border-radius:16px;font-size:14px;font-weight:600;line-height:1.5}
+.msg.ai .msg-bubble{background:var(--surface2);border:1px solid var(--border);border-top-left-radius:4px}
+.msg.user .msg-bubble{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-top-right-radius:4px}
+.msg-correction{background:var(--warning-light);border:1px solid var(--warning);border-radius:10px;padding:8px 12px;margin-top:6px;font-size:12px;color:#7A4F00;font-weight:600}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input-row .inp{flex:1;resize:none;min-height:44px;max-height:120px}
+.rec-btn{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:.2s}
+.rec-btn.recording{background:var(--danger);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+.rec-status{font-size:12px;color:var(--text3);font-weight:600;text-align:center;margin-top:6px;min-height:18px}
+
+/* GRAMMAR */
+.grammar-lesson{border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);overflow:hidden;margin-bottom:12px}
+.grammar-lesson-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
+.grammar-lesson-title{font-size:15px;font-weight:800;color:var(--text)}
+.grammar-lesson-body{padding:0 16px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+.grammar-lesson-body.open{max-height:1200px;padding:0 16px 16px}
+.grammar-rule{font-size:14px;line-height:1.7;color:var(--text2);margin-bottom:12px}
+.grammar-rule strong{color:var(--primary);font-weight:800}
+.grammar-rule em{color:var(--accent-dark);font-style:normal;font-weight:700}
+.example-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.example-table th{background:var(--primary-xlight);color:var(--primary);padding:7px 10px;text-align:left;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+.example-table td{padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;vertical-align:top}
+.example-table tr:last-child td{border-bottom:none}
+.grammar-tip{background:var(--warning-light);border-left:3px solid var(--warning);border-radius:0 8px 8px 0;padding:10px 12px;font-size:13px;color:#7A4F00;font-weight:600;margin:10px 0}
+
+/* SETTINGS */
+.settings-section{margin-bottom:22px}
+.settings-section-title{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-row-label{font-size:14px;font-weight:700;color:var(--text)}
+.settings-row-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.api-key-wrap{display:flex;gap:8px;margin-top:8px}
+.api-key-wrap .inp{flex:1;font-size:13px;font-family:monospace}
+.key-visible-btn{width:38px;flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* RESULTS */
+.result-screen{text-align:center;padding:30px 20px}
+.result-emoji{font-size:60px;margin-bottom:12px}
+.result-title{font-size:24px;font-weight:900;color:var(--text);margin-bottom:6px}
+.result-stats{display:flex;justify-content:center;gap:24px;margin:20px 0}
+.result-stat{display:flex;flex-direction:column;align-items:center}
+.result-stat-val{font-size:28px;font-weight:900}
+.result-stat-lbl{font-size:12px;color:var(--text3);font-weight:700;margin-top:2px}
+.xp-earned{background:linear-gradient(135deg,var(--primary),var(--accent-dark));color:#fff;border-radius:14px;padding:14px 24px;margin:16px auto;display:inline-block;font-size:18px;font-weight:800}
+
+/* HOME */
+.greeting-card{background:linear-gradient(135deg,var(--primary) 0%,#0A3AA0 60%,#062580 100%);border-radius:var(--radius);padding:22px 20px;color:#fff;position:relative;overflow:hidden;margin-bottom:14px}
+.greeting-card::after{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(255,255,255,.07);border-radius:50%}
+.greeting-card::before{content:'';position:absolute;right:50px;bottom:-30px;width:80px;height:80px;background:rgba(61,214,140,.12);border-radius:50%}
+.greeting-text{font-size:22px;font-weight:900;margin-bottom:4px;position:relative}
+.greeting-sub{font-size:14px;opacity:.75;font-weight:600;position:relative}
+.lang-pair-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:6px 12px;margin-top:12px;font-size:13px;font-weight:700;position:relative}
+.lang-pair-badge span.arrow{color:var(--accent);opacity:1}
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.quick-card{border-radius:var(--radius);padding:18px 16px;cursor:pointer;transition:.18s;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border)}
+.quick-card:active{transform:scale(.97)}
+.quick-card-icon{font-size:26px}
+.quick-card-title{font-size:14px;font-weight:800;color:var(--text)}
+.quick-card-sub{font-size:12px;color:var(--text3);font-weight:600}
+.qc-blue{background:var(--primary-xlight);border-color:var(--border2)}
+.qc-green{background:var(--accent-light);border-color:#A0EFC7}
+.tip-card{background:var(--warning-light);border:1px solid #FDE68A;border-radius:var(--radius);padding:16px}
+.tip-label{font-size:11px;font-weight:800;color:#92400E;text-transform:uppercase;margin-bottom:6px;letter-spacing:.5px}
+.tip-text{font-size:14px;color:#78350F;font-weight:600;line-height:1.5}
+.ai-gen-card{background:linear-gradient(135deg,#0C1A3D,#1A2B5C);border-radius:var(--radius);padding:18px;color:#fff;margin-bottom:14px}
+.ai-gen-title{font-size:15px;font-weight:800;margin-bottom:4px}
+.ai-gen-sub{font-size:13px;opacity:.6;margin-bottom:12px;font-weight:600}
+.ai-gen-row{display:flex;gap:8px}
+.ai-gen-row .inp{flex:1;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+.ai-gen-row .inp::placeholder{color:rgba(255,255,255,.4)}
+.app-footer{text-align:center;padding:20px;font-size:11px;color:var(--text3);font-weight:600;line-height:1.8}
+#toast{position:fixed;bottom:calc(var(--nav-h)+20px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;font-weight:700;opacity:0;transition:.28s;pointer-events:none;white-space:nowrap;z-index:999;max-width:calc(100vw - 40px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#modal-overlay{position:fixed;inset:0;background:rgba(12,26,61,.5);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:900}
+#modal-overlay.show{display:flex}
+#modal-box{background:var(--surface);border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;animation:slideUp .28s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:16px}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.modal-actions .btn{flex:1}
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(27,106,240,.2);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:14px;font-weight:600;padding:14px 0}
+#views::-webkit-scrollbar{width:4px}
+#views::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+@media(min-width:481px){#app{border-radius:24px;height:calc(100vh - 40px);margin:20px auto}body{display:flex;align-items:center;justify-content:center}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sG" x1="10" y1="75" x2="70" y2="5" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#1244CC"/>
+            <stop offset="45%" stop-color="#0AABDF"/>
+            <stop offset="100%" stop-color="#3DD68C"/>
+          </linearGradient>
+          <linearGradient id="aG" x1="45" y1="40" x2="75" y2="8" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#3DD68C"/>
+            <stop offset="100%" stop-color="#6EE89A"/>
+          </linearGradient>
+        </defs>
+        <path d="M62 16 C72 16 76 28 68 38 C60 48 40 46 34 55 C28 64 32 76 48 76 C58 76 68 70 68 62" stroke="url(#sG)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="60" y1="35" x2="74" y2="10" stroke="url(#aG)" stroke-width="9" stroke-linecap="round"/>
+        <path d="M65 5 L76 12 L69 22" stroke="url(#aG)" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="logo-wordmark">
+        <div class="logo-name">SEMAN<span>T</span>EQ</div>
+        <div class="logo-tagline">Language Learning App</div>
+      </div>
+    </div>
+    <div class="lang-pill" onclick="openLangModal()">
+      <span id="ui-lang-flag">&#127465;&#127466;</span>
+      <span id="ui-lang-code" style="margin-left:3px">DE</span>
+    </div>
+  </div>
+  <div id="views"></div>
+  <nav id="bottomnav">
+    <button class="nav-item active" data-view="home" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span data-i18n="nav_home">Start</span>
+    </button>
+    <button class="nav-item" data-view="vocab" onclick="navigate('vocab')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <span data-i18n="nav_vocab">Vokabeln</span>
+    </button>
+    <button class="nav-item" data-view="grammar" onclick="navigate('grammar')">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
+      <span data-i18n="nav_grammar">Grammatik</span>
+    </button>
+    <button class="nav-item" data-view="translate" onclick="navigate('translate')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      <span data-i18n="nav_translate">&#220;bersetzer</span>
+    </button>
+    <button class="nav-item" data-view="speech" onclick="navigate('speech')">
+      <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+      <span data-i18n="nav_speech">Sprechen</span>
+    </button>
+    <button class="nav-item" data-view="settings" onclick="navigate('settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span data-i18n="nav_settings">Einstellungen</span>
+    </button>
+  </nav>
+</div>
+<div id="toast"></div>
+<div id="modal-overlay" onclick="closeModal(event)"><div id="modal-box"></div></div>
+<script>
+const BUILD={version:2,date:'28.07.2026',dev:'René Prause'};
+
+const T={
+  de:{nav_home:'Start',nav_vocab:'Vokabeln',nav_grammar:'Grammatik',nav_translate:'Übersetzer',nav_speech:'Sprechen',nav_settings:'Einstellungen',welcome:'Willkommen zurück!',daily_goal:'Tagesziel',streak:'Serie',xp:'XP',words_learned:'Wörter',continue_lrn:'Weiterlernen',quick_tr:'Schnellübersetzer',vocab_title:'Vokabeltrainer',topic:'Thema',mode:'Modus',mode_fc:'Karteikarte',mode_quiz:'Quiz',mode_write:'Schreiben',show_ans:'Antwort zeigen',knew:'Wusste ich ✓',didnt:'Nicht gewusst ✗',next:'Weiter',start_session:'Einheit starten',grammar_title:'Grammatik',lvl:'Niveau',tr_title:'Übersetzer',translate:'Übersetzen',enter_text:'Text eingeben …',by_ai:'KI-Übersetzung',by_deepl:'DeepL',speech_title:'Sprechtraining',conversation:'Gespräch',pronunciation:'Aussprache',start_rec:'Aufnahme starten',settings_title:'Einstellungen',api_keys:'API-Schlüssel',claude_key:'Claude API-Schlüssel',deepl_key:'DeepL API-Schlüssel',save:'Speichern',saved:'Gespeichert ✓',spd:'Sprachgeschwindigkeit',slow:'Langsam',fast:'Schnell',ui_lang:'App-Sprache',learn_from:'Ich spreche',learn_to:'Ich lerne',chk_upd:'Auf Update prüfen',version:'Version',reset_prog:'Fortschritt zurücksetzen',confirm_reset:'Wirklich zurücksetzen?',yes:'Ja, zurücksetzen',cancel:'Abbrechen',no_key:'Kein API-Schlüssel. Bitte in Einstellungen eintragen.',session_done:'Einheit abgeschlossen!',correct:'Richtig',wrong:'Falsch',total:'Gesamt',xp_earned:'XP verdient',play_again:'Nochmal',go_home:'Zurück',generate:'KI-Vokabeln generieren',gen_btn:'Generieren',generating:'Generiere …',tip_label:'Tipp des Tages',ask_ai:'KI fragen',level_select:'Niveau wählen',speak_prompt:'Sag etwas auf',write_answer:'Antwort tippen …',check:'Prüfen',hint:'Hinweis',correct_ans:'Richtige Antwort:',prog_of:'von',words_lbl:'Wörtern',learndir:'Lernrichtung',cancel_session:'Abbrechen',total_words:'Gesamt'},
+  en:{nav_home:'Home',nav_vocab:'Vocabulary',nav_grammar:'Grammar',nav_translate:'Translate',nav_speech:'Speaking',nav_settings:'Settings',welcome:'Welcome back!',daily_goal:'Daily Goal',streak:'Streak',xp:'XP',words_learned:'Words',continue_lrn:'Continue',quick_tr:'Quick Translate',vocab_title:'Vocabulary Trainer',topic:'Topic',mode:'Mode',mode_fc:'Flashcard',mode_quiz:'Quiz',mode_write:'Write',show_ans:'Show Answer',knew:'Got it ✓',didnt:'Missed ✗',next:'Next',start_session:'Start Session',grammar_title:'Grammar',lvl:'Level',tr_title:'Translator',translate:'Translate',enter_text:'Enter text …',by_ai:'Translated by AI',by_deepl:'DeepL',speech_title:'Speaking Practice',conversation:'Conversation',pronunciation:'Pronunciation',start_rec:'Start Recording',settings_title:'Settings',api_keys:'API Keys',claude_key:'Claude API Key',deepl_key:'DeepL API Key',save:'Save',saved:'Saved ✓',spd:'Speech Speed',slow:'Slow',fast:'Fast',ui_lang:'App Language',learn_from:'I speak',learn_to:"I'm learning",chk_upd:'Check for Update',version:'Version',reset_prog:'Reset Progress',confirm_reset:'Really reset everything?',yes:'Yes, reset',cancel:'Cancel',no_key:'No API key set. Please add in Settings.',session_done:'Session complete!',correct:'Correct',wrong:'Wrong',total:'Total',xp_earned:'XP earned',play_again:'Play Again',go_home:'Home',generate:'Generate AI Vocabulary',gen_btn:'Generate',generating:'Generating …',tip_label:'Tip of the Day',ask_ai:'Ask AI',level_select:'Select Level',speak_prompt:'Say something in',write_answer:'Type your answer …',check:'Check',hint:'Hint',correct_ans:'Correct answer:',prog_of:'of',words_lbl:'words',learndir:'Learning Direction',cancel_session:'Cancel',total_words:'Total'},
+  ru:{nav_home:'Главная',nav_vocab:'Словарь',nav_grammar:'Грамматика',nav_translate:'Перевод',nav_speech:'Речь',nav_settings:'Настройки',welcome:'С возвращением!',daily_goal:'Цель дня',streak:'Серия',xp:'Очки',words_learned:'Слов',continue_lrn:'Продолжить',quick_tr:'Быстрый перевод',vocab_title:'Тренажёр слов',topic:'Тема',mode:'Режим',mode_fc:'Карточки',mode_quiz:'Тест',mode_write:'Написание',show_ans:'Показать ответ',knew:'Знал(а) ✓',didnt:'Не знал(а) ✗',next:'Далее',start_session:'Начать',grammar_title:'Грамматика',lvl:'Уровень',tr_title:'Переводчик',translate:'Перевести',enter_text:'Введите текст …',by_ai:'Переведено ИИ',by_deepl:'DeepL',speech_title:'Речевая практика',conversation:'Разговор',pronunciation:'Произношение',start_rec:'Начать запись',settings_title:'Настройки',api_keys:'API-ключи',claude_key:'Ключ Claude API',deepl_key:'Ключ DeepL API',save:'Сохранить',saved:'Сохранено ✓',spd:'Скорость речи',slow:'Медленно',fast:'Быстро',ui_lang:'Язык приложения',learn_from:'Я говорю',learn_to:'Я учу',chk_upd:'Проверить обновление',version:'Версия',reset_prog:'Сбросить прогресс',confirm_reset:'Точно сбросить всё?',yes:'Да, сбросить',cancel:'Отмена',no_key:'API-ключ не указан.',session_done:'Занятие завершено!',correct:'Правильно',wrong:'Неверно',total:'Всего',xp_earned:'Очков получено',play_again:'Ещё раз',go_home:'Главная',generate:'Генерировать словарь ИИ',gen_btn:'Генерировать',generating:'Генерирую …',tip_label:'Совет дня',ask_ai:'Спросить ИИ',level_select:'Выбрать уровень',speak_prompt:'Скажите что-нибудь на',write_answer:'Введите ответ …',check:'Проверить',hint:'Подсказка',correct_ans:'Правильный ответ:',prog_of:'из',words_lbl:'слов',learndir:'Направление',cancel_session:'Отмена',total_words:'Всего'}
+};
+
+const LANGS={
+  de:{label:{de:'Deutsch',en:'German',ru:'Немецкий'},flag:'🇩🇪',tts:'de-DE'},
+  en:{label:{de:'Englisch',en:'English',ru:'Английский'},flag:'🇬🇧',tts:'en-GB'},
+  ru:{label:{de:'Russisch',en:'Russian',ru:'Русский'},flag:'🇷🇺',tts:'ru-RU'}
+};
+
+const TOPIC_LABELS={
+  greetings:{de:'Begrüßungen',en:'Greetings',ru:'Приветствия'},
+  numbers:{de:'Zahlen',en:'Numbers',ru:'Числа'},
+  colors:{de:'Farben',en:'Colors',ru:'Цвета'},
+  time:{de:'Zeit & Datum',en:'Time & Date',ru:'Время'},
+  family:{de:'Familie',en:'Family',ru:'Семья'},
+  food:{de:'Essen',en:'Food',ru:'Еда'},
+  drinks:{de:'Getränke',en:'Drinks',ru:'Напитки'},
+  animals:{de:'Tiere',en:'Animals',ru:'Животные'},
+  clothing:{de:'Kleidung',en:'Clothing',ru:'Одежда'},
+  house:{de:'Zuhause',en:'Home',ru:'Дом'},
+  travel:{de:'Reisen',en:'Travel',ru:'Путешествия'},
+  work:{de:'Arbeit',en:'Work',ru:'Работа'},
+  nature:{de:'Natur',en:'Nature',ru:'Природа'},
+  weather:{de:'Wetter',en:'Weather',ru:'Погода'},
+  health:{de:'Gesundheit',en:'Health',ru:'Здоровье'},
+  emotions:{de:'Gefühle',en:'Feelings',ru:'Чувства'},
+  sports:{de:'Sport',en:'Sports',ru:'Спорт'},
+  technology:{de:'Technologie',en:'Technology',ru:'Технологии'},
+  advanced:{de:'Fortgeschritten',en:'Advanced',ru:'Продвинутый'},
+  body:{de:'Körper',en:'Body',ru:'Тело'},
+  school:{de:'Schule',en:'School',ru:'Школа'},
+  city:{de:'Stadt',en:'City',ru:'Город'},
+  professions:{de:'Berufe',en:'Professions',ru:'Профессии'},
+  adjectives:{de:'Adjektive',en:'Adjectives',ru:'Прилагательные'},
+  verbs:{de:'Verben',en:'Verbs',ru:'Глаголы'},
+  hobbies:{de:'Hobbys',en:'Hobbies',ru:'Хобби'},
+  shopping:{de:'Einkaufen',en:'Shopping',ru:'Покупки'},
+  restaurant:{de:'Restaurant',en:'Restaurant',ru:'Ресторан'},
+  music:{de:'Musik',en:'Music',ru:'Музыка'},
+  science:{de:'Wissenschaft',en:'Science',ru:'Наука'},
+  environment:{de:'Umwelt',en:'Environment',ru:'Окружающая среда'},
+  finance:{de:'Finanzen',en:'Finance',ru:'Финансы'},
+  politics:{de:'Politik',en:'Politics',ru:'Политика'},
+  media:{de:'Medien',en:'Media',ru:'СМИ'},
+  geography:{de:'Geographie',en:'Geography',ru:'География'},
+  phrases:{de:'Redewendungen',en:'Phrases',ru:'Фразы'},
+  art:{de:'Kunst',en:'Art',ru:'Искусство'},
+  literature:{de:'Literatur',en:'Literature',ru:'Литература'},
+  law:{de:'Recht',en:'Law',ru:'Право'},
+  religion:{de:'Religion',en:'Religion',ru:'Религия'},
+  philosophy:{de:'Philosophie',en:'Philosophy',ru:'Философия'},
+  psychology:{de:'Psychologie',en:'Psychology',ru:'Психология'}
+};
+
+const TIPS={
+  de:['Lerne täglich mindestens 10 neue Vokabeln!','Übe täglich Lesen kurzer Texte auf Deutsch.','Schau deutsche Filme mit deutschen Untertiteln.','Führe ein Tagebuch auf Deutsch!','Spreche laut mit dir selbst auf der Lernsprache.','Wiederhole Vokabeln in regelmäßigen Abständen.','Höre Podcasts auf der Zielsprache.'],
+  en:['Learn at least 10 new words every day!','Try to think in English, not translate.','Watch English movies with English subtitles.','Keep a vocabulary journal with example sentences.','Speak out loud – even to yourself!','Review vocabulary at spaced intervals.','Listen to podcasts in your target language.'],
+  ru:['Учите новые слова каждый день!','Слушайте русскую музыку.','Читайте русские тексты вслух.','Смотрите русские фильмы.','Говорите вслух на русском.','Повторяйте слова через равные промежутки.','Слушайте подкасты на русском.']
+};
+// [id, topic, level, de, en, ru]
+const VOCAB=[
+[1,'greetings','A1','Hallo','Hello','Привет'],
+[2,'greetings','A1','Guten Morgen','Good morning','Доброе утро'],
+[3,'greetings','A1','Guten Abend','Good evening','Добрый вечер'],
+[4,'greetings','A1','Gute Nacht','Good night','Спокойной ночи'],
+[5,'greetings','A1','Auf Wiedersehen','Goodbye','До свидания'],
+[6,'greetings','A1','Bitte','Please','Пожалуйста'],
+[7,'greetings','A1','Danke','Thank you','Спасибо'],
+[8,'greetings','A1','Entschuldigung','Excuse me','Извините'],
+[9,'greetings','A1','Ja','Yes','Да'],
+[10,'greetings','A1','Nein','No','Нет'],
+[11,'greetings','A1','Wie heißen Sie?','What is your name?','Как вас зовут?'],
+[12,'greetings','A1','Ich heiße ...','My name is ...','Меня зовут ...'],
+[13,'greetings','A1','Wie geht es Ihnen?','How are you?','Как вы?'],
+[14,'greetings','A1','Mir geht es gut','I am fine','Я в порядке'],
+[15,'greetings','A1','Tschüss','Bye','Пока'],
+[16,'greetings','A2','Schön, dich kennenzulernen','Nice to meet you','Приятно познакомиться'],
+[17,'greetings','A2','Bis bald!','See you soon!','До скорого!'],
+[18,'greetings','A2','Bis morgen!','See you tomorrow!','До завтра!'],
+[19,'greetings','A2','Herzlich willkommen!','Welcome!','Добро пожаловать!'],
+[20,'greetings','A2','Alles Gute!','All the best!','Всего хорошего!'],
+[21,'greetings','B1','Lange nicht gesehen','Long time no see','Давно не виделись'],
+[22,'greetings','B1','Pass auf dich auf!','Look after yourself!','Береги себя!'],
+[23,'greetings','B1','Herzlichen Glückwunsch!','Congratulations!','Поздравляю!'],
+[24,'greetings','B1','Viel Erfolg!','Good luck!','Удачи!'],
+[25,'greetings','B1','Das freut mich!','I\'m glad!','Я рад!'],
+[26,'numbers','A1','eins','one','один'],
+[27,'numbers','A1','zwei','two','два'],
+[28,'numbers','A1','drei','three','три'],
+[29,'numbers','A1','vier','four','четыре'],
+[30,'numbers','A1','fünf','five','пять'],
+[31,'numbers','A1','sechs','six','шесть'],
+[32,'numbers','A1','sieben','seven','семь'],
+[33,'numbers','A1','acht','eight','восемь'],
+[34,'numbers','A1','neun','nine','девять'],
+[35,'numbers','A1','zehn','ten','десять'],
+[36,'numbers','A1','elf','eleven','одиннадцать'],
+[37,'numbers','A1','zwölf','twelve','двенадцать'],
+[38,'numbers','A1','zwanzig','twenty','двадцать'],
+[39,'numbers','A1','hundert','hundred','сто'],
+[40,'numbers','A1','tausend','thousand','тысяча'],
+[41,'numbers','A1','null','zero','ноль'],
+[42,'numbers','A2','der erste','the first','первый'],
+[43,'numbers','A2','der zweite','the second','второй'],
+[44,'numbers','A2','der dritte','the third','третий'],
+[45,'numbers','A2','die Hälfte','half','половина'],
+[46,'numbers','A2','ein Viertel','a quarter','четверть'],
+[47,'numbers','A2','ungefähr','approximately','приблизительно'],
+[48,'numbers','A2','genau','exactly','точно'],
+[49,'numbers','A2','doppelt','double','двойной'],
+[50,'numbers','A2','gleich','equals','равно'],
+[51,'colors','A1','rot','red','красный'],
+[52,'colors','A1','blau','blue','синий'],
+[53,'colors','A1','grün','green','зелёный'],
+[54,'colors','A1','gelb','yellow','жёлтый'],
+[55,'colors','A1','weiß','white','белый'],
+[56,'colors','A1','schwarz','black','чёрный'],
+[57,'colors','A1','orange','orange','оранжевый'],
+[58,'colors','A1','lila','purple','фиолетовый'],
+[59,'colors','A1','grau','grey','серый'],
+[60,'colors','A1','braun','brown','коричневый'],
+[61,'colors','A1','rosa','pink','розовый'],
+[62,'colors','A1','gold','gold','золотой'],
+[63,'colors','A2','türkis','turquoise','бирюзовый'],
+[64,'colors','A2','beige','beige','бежевый'],
+[65,'colors','A2','silber','silver','серебристый'],
+[66,'colors','A2','hellblau','light blue','голубой'],
+[67,'colors','A2','dunkelblau','dark blue','тёмно-синий'],
+[68,'colors','B1','bordeaux','burgundy','бордовый'],
+[69,'time','A1','Montag','Monday','понедельник'],
+[70,'time','A1','Dienstag','Tuesday','вторник'],
+[71,'time','A1','Mittwoch','Wednesday','среда'],
+[72,'time','A1','Donnerstag','Thursday','четверг'],
+[73,'time','A1','Freitag','Friday','пятница'],
+[74,'time','A1','Samstag','Saturday','суббота'],
+[75,'time','A1','Sonntag','Sunday','воскресенье'],
+[76,'time','A1','heute','today','сегодня'],
+[77,'time','A1','morgen','tomorrow','завтра'],
+[78,'time','A1','gestern','yesterday','вчера'],
+[79,'time','A2','Januar','January','январь'],
+[80,'time','A2','Februar','February','февраль'],
+[81,'time','A2','März','March','март'],
+[82,'time','A2','April','April','апрель'],
+[83,'time','A2','Mai','May','май'],
+[84,'time','A2','Juni','June','июнь'],
+[85,'time','A2','Juli','July','июль'],
+[86,'time','A2','August','August','август'],
+[87,'time','A2','September','September','сентябрь'],
+[88,'time','A2','Oktober','October','октябрь'],
+[89,'time','A2','November','November','ноябрь'],
+[90,'time','A2','Dezember','December','декабрь'],
+[91,'time','A2','die Stunde','hour','час'],
+[92,'time','A2','die Minute','minute','минута'],
+[93,'time','A2','die Sekunde','second','секунда'],
+[94,'time','A2','die Woche','week','неделя'],
+[95,'time','A2','der Monat','month','месяц'],
+[96,'time','A2','das Jahr','year','год'],
+[97,'family','A1','die Mutter','mother','мать'],
+[98,'family','A1','der Vater','father','отец'],
+[99,'family','A1','die Schwester','sister','сестра'],
+[100,'family','A1','der Bruder','brother','брат'],
+[101,'family','A1','die Großmutter','grandmother','бабушка'],
+[102,'family','A1','der Großvater','grandfather','дедушка'],
+[103,'family','A1','das Kind','child','ребёнок'],
+[104,'family','A1','die Eltern','parents','родители'],
+[105,'family','A2','die Tante','aunt','тётя'],
+[106,'family','A2','der Onkel','uncle','дядя'],
+[107,'family','A2','die Ehefrau','wife','жена'],
+[108,'family','A2','der Ehemann','husband','муж'],
+[109,'family','A2','die Schwiegermutter','mother-in-law','свекровь'],
+[110,'family','A2','der Schwiegervater','father-in-law','свёкор'],
+[111,'food','A1','das Brot','bread','хлеб'],
+[112,'food','A1','die Butter','butter','масло'],
+[113,'food','A1','das Ei','egg','яйцо'],
+[114,'food','A1','der Käse','cheese','сыр'],
+[115,'food','A1','die Milch','milk','молоко'],
+[116,'food','A1','der Apfel','apple','яблоко'],
+[117,'food','A1','die Banane','banana','банан'],
+[118,'food','A1','die Tomate','tomato','помидор'],
+[119,'food','A2','das Fleisch','meat','мясо'],
+[120,'food','A2','der Fisch','fish','рыба'],
+[121,'food','A2','das Gemüse','vegetables','овощи'],
+[122,'food','A2','das Obst','fruit','фрукты'],
+[123,'food','A2','die Nudeln','pasta','макароны'],
+[124,'food','A2','der Reis','rice','рис'],
+[125,'food','A2','die Suppe','soup','суп'],
+[126,'food','A2','der Salat','salad','салат'],
+[127,'food','B1','das Hähnchen','chicken','курица'],
+[128,'food','B1','die Karotte','carrot','морковь'],
+[129,'food','B1','die Kartoffel','potato','картофель'],
+[130,'food','B1','der Knoblauch','garlic','чеснок'],
+[131,'food','B1','das Rindfleisch','beef','говядина'],
+[132,'food','B1','das Schweinefleisch','pork','свинина'],
+[133,'food','B1','die Garnele','shrimp','креветка'],
+[134,'food','B1','der Lachs','salmon','лосось'],
+[135,'food','B2','die Delikatesse','delicacy','деликатес'],
+[136,'food','B2','das Gewürz','spice','пряность'],
+[137,'food','B2','das Olivenöl','olive oil','оливковое масло'],
+[138,'food','B2','biologisch','organic','органический'],
+[139,'food','B2','glutenfrei','gluten-free','безглютеновый'],
+[140,'drinks','A1','das Wasser','water','вода'],
+[141,'drinks','A1','der Kaffee','coffee','кофе'],
+[142,'drinks','A1','der Tee','tea','чай'],
+[143,'drinks','A1','der Saft','juice','сок'],
+[144,'drinks','A2','das Bier','beer','пиво'],
+[145,'drinks','A2','der Wein','wine','вино'],
+[146,'drinks','A2','die Limonade','lemonade','лимонад'],
+[147,'drinks','A2','das Mineralwasser','mineral water','минеральная вода'],
+[148,'drinks','A2','der Espresso','espresso','эспрессо'],
+[149,'drinks','A2','der Cappuccino','cappuccino','капуччино'],
+[150,'drinks','B1','der Kräutertee','herbal tea','травяной чай'],
+[151,'animals','A1','der Hund','dog','собака'],
+[152,'animals','A1','die Katze','cat','кошка'],
+[153,'animals','A1','das Pferd','horse','лошадь'],
+[154,'animals','A1','der Vogel','bird','птица'],
+[155,'animals','A2','der Löwe','lion','лев'],
+[156,'animals','A2','der Tiger','tiger','тигр'],
+[157,'animals','A2','der Elefant','elephant','слон'],
+[158,'animals','A2','der Bär','bear','медведь'],
+[159,'animals','A2','der Wolf','wolf','волк'],
+[160,'animals','A2','das Kaninchen','rabbit','кролик'],
+[161,'animals','A2','die Kuh','cow','корова'],
+[162,'animals','A2','der Delfin','dolphin','дельфин'],
+[163,'animals','B1','der Fuchs','fox','лиса'],
+[164,'animals','B1','der Hirsch','deer','олень'],
+[165,'animals','B1','der Adler','eagle','орёл'],
+[166,'animals','B1','die Eule','owl','сова'],
+[167,'animals','B1','der Papagei','parrot','попугай'],
+[168,'animals','B1','die Schildkröte','turtle','черепаха'],
+[169,'animals','B1','das Krokodil','crocodile','крокодил'],
+[170,'animals','B1','die Giraffe','giraffe','жираф'],
+[171,'animals','B2','der Schmetterling','butterfly','бабочка'],
+[172,'animals','B2','die Biene','bee','пчела'],
+[173,'animals','B2','der Hai','shark','акула'],
+[174,'animals','B2','der Pinguin','penguin','пингвин'],
+[175,'animals','B2','der Panda','panda','панда'],
+[176,'clothing','A2','das Hemd','shirt','рубашка'],
+[177,'clothing','A2','die Hose','trousers','брюки'],
+[178,'clothing','A2','das Kleid','dress','платье'],
+[179,'clothing','A2','die Jacke','jacket','куртка'],
+[180,'clothing','A2','der Mantel','coat','пальто'],
+[181,'clothing','A2','die Schuhe','shoes','туфли'],
+[182,'clothing','A2','die Socken','socks','носки'],
+[183,'clothing','A2','der Schal','scarf','шарф'],
+[184,'clothing','A2','der Pullover','sweater','свитер'],
+[185,'clothing','A2','die Jeans','jeans','джинсы'],
+[186,'clothing','B1','die Handtasche','handbag','сумочка'],
+[187,'clothing','B1','der Gürtel','belt','ремень'],
+[188,'clothing','B1','die Krawatte','tie','галстук'],
+[189,'clothing','B1','der Badeanzug','swimsuit','купальник'],
+[190,'clothing','B2','der Blazer','blazer','блейзер'],
+[191,'house','A2','das Zimmer','room','комната'],
+[192,'house','A2','die Küche','kitchen','кухня'],
+[193,'house','A2','das Badezimmer','bathroom','ванная'],
+[194,'house','A2','das Schlafzimmer','bedroom','спальня'],
+[195,'house','A2','das Wohnzimmer','living room','гостиная'],
+[196,'house','A2','der Tisch','table','стол'],
+[197,'house','A2','der Stuhl','chair','стул'],
+[198,'house','A2','das Bett','bed','кровать'],
+[199,'house','A2','das Fenster','window','окно'],
+[200,'house','A2','die Tür','door','дверь'],
+[201,'house','B1','der Schrank','wardrobe','шкаф'],
+[202,'house','B1','die Treppe','staircase','лестница'],
+[203,'house','B1','der Keller','basement','подвал'],
+[204,'house','B1','das Dach','roof','крыша'],
+[205,'house','B1','der Balkon','balcony','балкон'],
+[206,'house','B2','die Heizung','heating','отопление'],
+[207,'house','B2','die Waschmaschine','washing machine','стиральная машина'],
+[208,'house','B2','die Klimaanlage','air conditioning','кондиционер'],
+[209,'travel','A2','das Flugzeug','airplane','самолёт'],
+[210,'travel','A2','der Zug','train','поезд'],
+[211,'travel','A2','das Auto','car','автомобиль'],
+[212,'travel','A2','der Bus','bus','автобус'],
+[213,'travel','A2','das Hotel','hotel','гостиница'],
+[214,'travel','A2','der Bahnhof','train station','вокзал'],
+[215,'travel','A2','der Flughafen','airport','аэропорт'],
+[216,'travel','B1','der Reisepass','passport','паспорт'],
+[217,'travel','B1','das Visum','visa','виза'],
+[218,'travel','B1','das Gepäck','luggage','багаж'],
+[219,'travel','B1','die Reservierung','reservation','бронирование'],
+[220,'travel','B1','der Urlaub','vacation','отпуск'],
+[221,'travel','B1','die Unterkunft','accommodation','жильё'],
+[222,'travel','B1','der Ausflug','excursion','экскурсия'],
+[223,'travel','B2','die Sehenswürdigkeit','attraction','достопримечательность'],
+[224,'travel','B2','der Jetlag','jet lag','джетлаг'],
+[225,'travel','C1','der Fernweh','wanderlust','тяга к путешествиям'],
+[226,'work','B1','der Beruf','profession','профессия'],
+[227,'work','B1','das Büro','office','офис'],
+[228,'work','B1','die Besprechung','meeting','совещание'],
+[229,'work','B1','der Chef','boss','начальник'],
+[230,'work','B1','das Gehalt','salary','зарплата'],
+[231,'work','B1','der Vertrag','contract','договор'],
+[232,'work','B1','die Bewerbung','job application','заявление'],
+[233,'work','B2','die Beförderung','promotion','повышение по службе'],
+[234,'work','B2','die Kündigung','dismissal','увольнение'],
+[235,'work','B2','die Überstunden','overtime','сверхурочная работа'],
+[236,'work','B2','das Homeoffice','home office','домашний офис'],
+[237,'work','C1','die Produktivität','productivity','продуктивность'],
+[238,'work','C1','das Burn-out','burnout','эмоциональное выгорание'],
+[239,'work','C1','die Work-Life-Balance','work-life balance','баланс работы и жизни'],
+[240,'nature','A2','der Wald','forest','лес'],
+[241,'nature','A2','der Berg','mountain','гора'],
+[242,'nature','A2','der See','lake','озеро'],
+[243,'nature','A2','das Meer','sea','море'],
+[244,'nature','A2','der Fluss','river','река'],
+[245,'nature','B1','die Blume','flower','цветок'],
+[246,'nature','B1','der Baum','tree','дерево'],
+[247,'nature','B1','der Wasserfall','waterfall','водопад'],
+[248,'nature','B1','das Tal','valley','долина'],
+[249,'nature','B2','der Gletscher','glacier','ледник'],
+[250,'nature','B2','der Regenwald','rainforest','тропический лес'],
+[251,'weather','A2','die Sonne','sun','солнце'],
+[252,'weather','A2','der Regen','rain','дождь'],
+[253,'weather','A2','der Schnee','snow','снег'],
+[254,'weather','A2','der Wind','wind','ветер'],
+[255,'weather','A2','die Wolke','cloud','облако'],
+[256,'weather','B1','das Gewitter','thunderstorm','гроза'],
+[257,'weather','B1','der Nebel','fog','туман'],
+[258,'weather','B1','der Frost','frost','мороз'],
+[259,'weather','B2','die Überschwemmung','flood','наводнение'],
+[260,'weather','B2','die Trockenheit','drought','засуха'],
+[261,'health','B1','der Arzt','doctor','врач'],
+[262,'health','B1','das Krankenhaus','hospital','больница'],
+[263,'health','B1','die Medizin','medicine','лекарство'],
+[264,'health','B1','der Schmerz','pain','боль'],
+[265,'health','B1','die Erkältung','cold (illness)','простуда'],
+[266,'health','B1','das Fieber','fever','жар'],
+[267,'health','B1','die Operation','operation','операция'],
+[268,'health','B1','die Tablette','tablet','таблетка'],
+[269,'health','B2','die Allergie','allergy','аллергия'],
+[270,'health','B2','die Impfung','vaccination','прививка'],
+[271,'health','B2','der Herzinfarkt','heart attack','инфаркт'],
+[272,'health','B2','der Blutdruck','blood pressure','кровяное давление'],
+[273,'health','C1','die Rehabilitation','rehabilitation','реабилитация'],
+[274,'emotions','A2','glücklich','happy','счастливый'],
+[275,'emotions','A2','traurig','sad','грустный'],
+[276,'emotions','A2','wütend','angry','злой'],
+[277,'emotions','A2','müde','tired','усталый'],
+[278,'emotions','A2','aufgeregt','excited','взволнованный'],
+[279,'emotions','B1','überrascht','surprised','удивлённый'],
+[280,'emotions','B1','ängstlich','anxious','тревожный'],
+[281,'emotions','B1','zufrieden','satisfied','довольный'],
+[282,'emotions','B1','stolz','proud','гордый'],
+[283,'emotions','B1','verliebt','in love','влюблённый'],
+[284,'emotions','B2','erleichtert','relieved','облегчённый'],
+[285,'emotions','B2','nääisch','jealous','ревнивый'],
+[286,'emotions','B2','begeistert','enthusiastic','восторженный'],
+[287,'emotions','B2','melancholisch','melancholic','меланхоличный'],
+[288,'emotions','C1','ambivalent','ambivalent','амбивалентный'],
+[289,'sports','B1','der Fußball','football','футбол'],
+[290,'sports','B1','das Tennis','tennis','теннис'],
+[291,'sports','B1','das Schwimmen','swimming','плавание'],
+[292,'sports','B1','das Laufen','running','бег'],
+[293,'sports','B1','der Basketball','basketball','баскетбол'],
+[294,'sports','B1','das Skifahren','skiing','лыжный спорт'],
+[295,'sports','B1','der Yoga','yoga','йога'],
+[296,'sports','B2','das Boxen','boxing','бокс'],
+[297,'sports','B2','das Surfen','surfing','сёрфинг'],
+[298,'sports','B2','der Marathon','marathon','марафон'],
+[299,'sports','B2','das Klettern','climbing','скалолазание'],
+[300,'sports','C1','die Leichtathletik','athletics','лёгкая атлетика'],
+[301,'technology','B1','das Handy','mobile phone','мобильный телефон'],
+[302,'technology','B1','der Computer','computer','компьютер'],
+[303,'technology','B1','das Internet','internet','интернет'],
+[304,'technology','B1','die App','app','приложение'],
+[305,'technology','B1','das Passwort','password','пароль'],
+[306,'technology','B2','die Künstliche Intelligenz','artificial intelligence','искусственный интеллект'],
+[307,'technology','B2','die Software','software','программное обеспечение'],
+[308,'technology','B2','die Verschlüsselung','encryption','шифрование'],
+[309,'technology','B2','der Algorithmus','algorithm','алгоритм'],
+[310,'technology','B2','der Roboter','robot','робот'],
+[311,'technology','C1','das maschinelle Lernen','machine learning','машинное обучение'],
+[312,'technology','C1','die Cybersicherheit','cybersecurity','кибербезопасность'],
+[313,'technology','C1','die virtuelle Realität','virtual reality','виртуальная реальность'],
+[314,'technology','C1','das Blockchain','blockchain','блокчейн'],
+[315,'advanced','C1','die Nachhaltigkeit','sustainability','устойчивость'],
+[316,'advanced','C1','die Globalisierung','globalisation','глобализация'],
+[317,'advanced','C1','die Ambivalenz','ambivalence','амбивалентность'],
+[318,'advanced','C1','das Paradox','paradox','парадокс'],
+[319,'advanced','C1','die Synthese','synthesis','синтез'],
+[320,'advanced','C1','die Analyse','analysis','анализ'],
+[321,'advanced','C2','die Nuance','nuance','нюанс'],
+[322,'advanced','C2','die Eigenverantwortung','personal responsibility','личная ответственность'],
+[323,'advanced','C2','das Sprachgefühl','feeling for language','языковое чутьё'],
+[324,'advanced','C2','die Rhetorik','rhetoric','риторика'],
+[325,'advanced','C2','die Ironie','irony','ирония'],
+[326,'body','A1','der Kopf','head','голова'],
+[327,'body','A1','das Gesicht','face','лицо'],
+[328,'body','A1','das Auge','eye','глаз'],
+[329,'body','A1','die Nase','nose','нос'],
+[330,'body','A1','der Mund','mouth','рот'],
+[331,'body','A1','das Ohr','ear','ухо'],
+[332,'body','A1','der Hals','neck','шея'],
+[333,'body','A1','die Schulter','shoulder','плечо'],
+[334,'body','A1','der Arm','arm','рука'],
+[335,'body','A1','die Hand','hand','кисть'],
+[336,'body','A1','der Finger','finger','палец'],
+[337,'body','A1','das Bein','leg','нога'],
+[338,'body','A1','das Knie','knee','колено'],
+[339,'body','A1','der Fuß','foot','стопа'],
+[340,'body','A1','der Rücken','back','спина'],
+[341,'body','A2','das Herz','heart','сердце'],
+[342,'body','A2','die Lunge','lung','лёгкое'],
+[343,'body','A2','der Magen','stomach','желудок'],
+[344,'body','A2','das Gehirn','brain','мозг'],
+[345,'body','A2','der Zahn','tooth','зуб'],
+[346,'body','A2','das Haar','hair','волосы'],
+[347,'body','A2','die Haut','skin','кожа'],
+[348,'body','A2','das Blut','blood','кровь'],
+[349,'body','A2','der Knochen','bone','кость'],
+[350,'body','A2','die Brust','chest','грудь'],
+[351,'body','B1','die Leber','liver','печень'],
+[352,'body','B1','die Niere','kidney','почка'],
+[353,'body','B1','die Muskel','muscle','мышца'],
+[354,'body','B1','der Nerv','nerve','нерв'],
+[355,'body','B1','der Puls','pulse','пульс'],
+[356,'school','A1','die Schule','school','школа'],
+[357,'school','A1','der Lehrer','teacher','учитель'],
+[358,'school','A1','der Schüler','pupil','ученик'],
+[359,'school','A1','das Buch','book','книга'],
+[360,'school','A1','der Stift','pen/pencil','ручка/карандаш'],
+[361,'school','A1','das Heft','notebook','тетрадь'],
+[362,'school','A1','die Tafel','blackboard','доска'],
+[363,'school','A1','der Rucksack','backpack','рюкзак'],
+[364,'school','A2','die Hausaufgabe','homework','домашнее задание'],
+[365,'school','A2','die Prüfung','exam','экзамен'],
+[366,'school','A2','die Note','grade','оценка'],
+[367,'school','A2','das Fach','subject','предмет'],
+[368,'school','A2','die Mathematik','mathematics','математика'],
+[369,'school','A2','die Geschichte','history','история'],
+[370,'school','A2','die Klasse','class','класс'],
+[371,'school','A2','der Unterricht','lesson','урок'],
+[372,'school','B1','die Universität','university','университет'],
+[373,'school','B1','der Student','student','студент'],
+[374,'school','B1','die Bibliothek','library','библиотека'],
+[375,'school','B1','das Stipendium','scholarship','стипендия'],
+[376,'school','B1','das Seminar','seminar','семинар'],
+[377,'school','B2','die Dissertation','dissertation','диссертация'],
+[378,'city','A2','die Straße','street','улица'],
+[379,'city','A2','die Kirche','church','церковь'],
+[380,'city','A2','das Museum','museum','музей'],
+[381,'city','A2','der Park','park','парк'],
+[382,'city','A2','der Markt','market','рынок'],
+[383,'city','A2','das Rathaus','city hall','ратуша'],
+[384,'city','A2','die Post','post office','почта'],
+[385,'city','A2','das Café','café','кафе'],
+[386,'city','A2','das Kino','cinema','кинотеатр'],
+[387,'city','A2','das Theater','theatre','театр'],
+[388,'city','A2','der Supermarkt','supermarket','супермаркет'],
+[389,'city','B1','die Kreuzung','crossroads','перекрёсток'],
+[390,'city','B1','die Ampel','traffic light','светофор'],
+[391,'city','B1','die Brücke','bridge','мост'],
+[392,'city','B1','das Denkmal','monument','памятник'],
+[393,'city','B1','die U-Bahn','underground','метро'],
+[394,'city','B1','der Vorort','suburb','пригород'],
+[395,'city','B2','die Innenstadt','city centre','центр города'],
+[396,'professions','A2','der Arzt','doctor','врач'],
+[397,'professions','A2','der Koch','chef','повар'],
+[398,'professions','A2','der Bäcker','baker','пекарь'],
+[399,'professions','A2','der Fahrer','driver','водитель'],
+[400,'professions','A2','der Polizist','police officer','полицейский'],
+[401,'professions','B1','der Ingenieur','engineer','инженер'],
+[402,'professions','B1','der Anwalt','lawyer','адвокат'],
+[403,'professions','B1','der Buchhalter','accountant','бухгалтер'],
+[404,'professions','B1','der Journalist','journalist','журналист'],
+[405,'professions','B1','der Architekt','architect','архитектор'],
+[406,'professions','B1','der Zahnarzt','dentist','стоматолог'],
+[407,'professions','B1','der Tierarzt','vet','ветеринар'],
+[408,'professions','B1','der Elektriker','electrician','электрик'],
+[409,'professions','B1','der Klempner','plumber','сантехник'],
+[410,'professions','B1','der Fotograf','photographer','фотограф'],
+[411,'professions','B2','der Chirurg','surgeon','хирург'],
+[412,'professions','B2','der Psychologe','psychologist','психолог'],
+[413,'professions','B2','der Diplomat','diplomat','дипломат'],
+[414,'professions','B2','der Programmierer','programmer','программист'],
+[415,'professions','B2','der Forscher','researcher','исследователь'],
+[416,'adjectives','A1','groß','big','большой'],
+[417,'adjectives','A1','klein','small','маленький'],
+[418,'adjectives','A1','alt','old','старый'],
+[419,'adjectives','A1','jung','young','молодой'],
+[420,'adjectives','A1','gut','good','хороший'],
+[421,'adjectives','A1','schlecht','bad','плохой'],
+[422,'adjectives','A1','schön','beautiful','красивый'],
+[423,'adjectives','A1','neu','new','новый'],
+[424,'adjectives','A1','warm','warm','тёплый'],
+[425,'adjectives','A1','kalt','cold','холодный'],
+[426,'adjectives','A1','schnell','fast','быстрый'],
+[427,'adjectives','A1','langsam','slow','медленный'],
+[428,'adjectives','A1','schwer','heavy','тяжёлый'],
+[429,'adjectives','A1','leicht','light/easy','лёгкий'],
+[430,'adjectives','A1','großartig','great','великолепный'],
+[431,'adjectives','A2','interessant','interesting','интересный'],
+[432,'adjectives','A2','langweilig','boring','скучный'],
+[433,'adjectives','A2','lustig','funny','смешной'],
+[434,'adjectives','A2','laut','loud','громкий'],
+[435,'adjectives','A2','leise','quiet','тихий'],
+[436,'adjectives','A2','sauber','clean','чистый'],
+[437,'adjectives','A2','schmutzig','dirty','грязный'],
+[438,'adjectives','A2','gesund','healthy','здоровый'],
+[439,'adjectives','A2','krank','sick','больной'],
+[440,'adjectives','A2','reich','rich','богатый'],
+[441,'adjectives','A2','arm','poor','бедный'],
+[442,'adjectives','A2','stark','strong','сильный'],
+[443,'adjectives','A2','schwach','weak','слабый'],
+[444,'adjectives','A2','fleißig','hardworking','трудолюбивый'],
+[445,'adjectives','A2','faul','lazy','ленивый'],
+[446,'adjectives','B1','freundlich','friendly','дружелюбный'],
+[447,'adjectives','B1','höflich','polite','вежливый'],
+[448,'adjectives','B1','ehrlich','honest','честный'],
+[449,'adjectives','B1','kreativ','creative','творческий'],
+[450,'adjectives','B1','mutig','courageous','смелый'],
+[451,'verbs','A1','gehen','to go','идти'],
+[452,'verbs','A1','kommen','to come','приходить'],
+[453,'verbs','A1','sein','to be','быть'],
+[454,'verbs','A1','haben','to have','иметь'],
+[455,'verbs','A1','machen','to do/make','делать'],
+[456,'verbs','A1','sagen','to say','говорить'],
+[457,'verbs','A1','sehen','to see','видеть'],
+[458,'verbs','A1','hören','to hear','слышать'],
+[459,'verbs','A1','essen','to eat','есть'],
+[460,'verbs','A1','trinken','to drink','пить'],
+[461,'verbs','A1','schlafen','to sleep','спать'],
+[462,'verbs','A1','wohnen','to live (reside)','жить'],
+[463,'verbs','A1','kaufen','to buy','покупать'],
+[464,'verbs','A1','spielen','to play','играть'],
+[465,'verbs','A1','lernen','to learn','учиться'],
+[466,'verbs','A2','arbeiten','to work','работать'],
+[467,'verbs','A2','fahren','to drive','ехать'],
+[468,'verbs','A2','fliegen','to fly','лететь'],
+[469,'verbs','A2','lesen','to read','читать'],
+[470,'verbs','A2','schreiben','to write','писать'],
+[471,'verbs','A2','sprechen','to speak','говорить'],
+[472,'verbs','A2','denken','to think','думать'],
+[473,'verbs','A2','wissen','to know (fact)','знать'],
+[474,'verbs','A2','helfen','to help','помогать'],
+[475,'verbs','A2','fragen','to ask','спрашивать'],
+[476,'verbs','B1','erklären','to explain','объяснять'],
+[477,'verbs','B1','verstehen','to understand','понимать'],
+[478,'verbs','B1','versuchen','to try','пытаться'],
+[479,'verbs','B1','entscheiden','to decide','решать'],
+[480,'verbs','B1','erreichen','to achieve','достигать'],
+[481,'hobbies','A2','das Lesen','reading','чтение'],
+[482,'hobbies','A2','das Kochen','cooking','приготовление пищи'],
+[483,'hobbies','A2','das Malen','painting','рисование'],
+[484,'hobbies','A2','das Fotografieren','photography','фотография'],
+[485,'hobbies','A2','das Singen','singing','пение'],
+[486,'hobbies','A2','das Tanzen','dancing','танцы'],
+[487,'hobbies','A2','das Wandern','hiking','пешеход'],
+[488,'hobbies','A2','das Angeln','fishing','рыбалка'],
+[489,'hobbies','A2','das Basteln','crafting','рукоделие'],
+[490,'hobbies','A2','das Gärtnern','gardening','садоводство'],
+[491,'hobbies','B1','das Stricken','knitting','вязание'],
+[492,'hobbies','B1','das Sammeln','collecting','коллекционирование'],
+[493,'hobbies','B1','das Camping','camping','кемпинг'],
+[494,'hobbies','B1','das Reiten','horse riding','верховая езда'],
+[495,'hobbies','B1','das Tauchen','diving','дайвинг'],
+[496,'shopping','A2','das Geschäft','shop','магазин'],
+[497,'shopping','A2','der Preis','price','цена'],
+[498,'shopping','A2','die Kasse','checkout','касса'],
+[499,'shopping','A2','die Größe','size','размер'],
+[500,'shopping','A2','teuer','expensive','дорогой'],
+[501,'shopping','A2','billig','cheap','дешёвый'],
+[502,'shopping','A2','der Rabatt','discount','скидка'],
+[503,'shopping','A2','die Quittung','receipt','квитанция'],
+[504,'shopping','A2','die Qualität','quality','качество'],
+[505,'shopping','B1','das Einkaufszentrum','shopping centre','торговый центр'],
+[506,'shopping','B1','die Marke','brand','марка'],
+[507,'shopping','B1','die Garantie','guarantee','гарантия'],
+[508,'shopping','B1','die Lieferung','delivery','доставка'],
+[509,'shopping','B1','das Sonderangebot','special offer','специальное предложение'],
+[510,'shopping','B2','der Umtausch','exchange of goods','обмен'],
+[511,'restaurant','A2','die Speisekarte','menu','меню'],
+[512,'restaurant','A2','die Vorspeise','starter','закуска'],
+[513,'restaurant','A2','das Hauptgericht','main course','главное блюдо'],
+[514,'restaurant','A2','die Nachspeise','dessert','десерт'],
+[515,'restaurant','A2','der Kellner','waiter','официант'],
+[516,'restaurant','A2','das Trinkgeld','tip','чаевые'],
+[517,'restaurant','A2','reservieren','to reserve','забронировать'],
+[518,'restaurant','A2','bestellen','to order','заказывать'],
+[519,'restaurant','B1','vegetarisch','vegetarian','вегетарианский'],
+[520,'restaurant','B1','die Portion','portion','порция'],
+[521,'restaurant','B1','die Beilage','side dish','гарнир'],
+[522,'restaurant','B1','das Rezept','recipe','рецепт'],
+[523,'restaurant','B1','die Zutaten','ingredients','ингредиенты'],
+[524,'restaurant','B2','das Buffet','buffet','шведский стол'],
+[525,'music','A2','die Musik','music','музыка'],
+[526,'music','A2','das Lied','song','песня'],
+[527,'music','A2','das Instrument','instrument','инструмент'],
+[528,'music','A2','die Gitarre','guitar','гитара'],
+[529,'music','A2','das Klavier','piano','фортепьяно'],
+[530,'music','A2','die Geige','violin','скрипка'],
+[531,'music','A2','die Trommel','drum','барабан'],
+[532,'music','A2','der Sänger','singer','певец'],
+[533,'music','A2','das Konzert','concert','концерт'],
+[534,'music','A2','die Stimme','voice','голос'],
+[535,'music','B1','das Orchester','orchestra','оркестр'],
+[536,'music','B1','der Chor','choir','хор'],
+[537,'music','B1','die Melodie','melody','мелодия'],
+[538,'music','B1','der Rhythmus','rhythm','ритм'],
+[539,'music','B1','die Harmonie','harmony','гармония'],
+[540,'music','B1','das Album','album','альбом'],
+[541,'music','B2','der Dirigent','conductor','дирижёр'],
+[542,'science','B1','die Wissenschaft','science','наука'],
+[543,'science','B1','das Experiment','experiment','эксперимент'],
+[544,'science','B1','die Theorie','theory','теория'],
+[545,'science','B1','das Labor','laboratory','лаборатория'],
+[546,'science','B1','die Entdeckung','discovery','открытие'],
+[547,'science','B1','die Erfindung','invention','изобретение'],
+[548,'science','B1','die Forschung','research','исследование'],
+[549,'science','B2','die Quantenphysik','quantum physics','квантовая физика'],
+[550,'science','B2','die Genetik','genetics','генетика'],
+[551,'science','B2','die Evolution','evolution','эволюция'],
+[552,'science','B2','das Atom','atom','атом'],
+[553,'science','B2','das Molekül','molecule','молекула'],
+[554,'science','B2','die Astronomie','astronomy','астрономия'],
+[555,'science','C1','die Biotechnologie','biotechnology','биотехнология'],
+[556,'environment','B1','die Umwelt','environment','окружающая среда'],
+[557,'environment','B1','der Klimawandel','climate change','изменение климата'],
+[558,'environment','B1','die Energie','energy','энергия'],
+[559,'environment','B1','das Recycling','recycling','переработка'],
+[560,'environment','B1','der Müll','rubbish','мусор'],
+[561,'environment','B1','die Luft','air','воздух'],
+[562,'environment','B1','erneuerbar','renewable','возобновляемый'],
+[563,'environment','B2','die Erderwärmung','global warming','глобальное потепление'],
+[564,'environment','B2','die Solarenergie','solar energy','солнечная энергия'],
+[565,'environment','B2','die Umweltverschmutzung','pollution','загрязнение'],
+[566,'environment','B2','die Biodiversität','biodiversity','биоразнообразие'],
+[567,'environment','B2','das Ökosystem','ecosystem','экосистема'],
+[568,'environment','C1','nachhaltig','sustainable','устойчивый'],
+[569,'finance','B1','das Geld','money','деньги'],
+[570,'finance','B1','das Konto','account','счёт'],
+[571,'finance','B1','Überweisung','bank transfer','банковский перевод'],
+[572,'finance','B1','der Kredit','loan','кредит'],
+[573,'finance','B1','die Schulden','debts','долги'],
+[574,'finance','B1','die Steuer','tax','налог'],
+[575,'finance','B1','die Währung','currency','валюта'],
+[576,'finance','B2','die Aktie','share/stock','акция'],
+[577,'finance','B2','die Börse','stock exchange','биржа'],
+[578,'finance','B2','die Inflation','inflation','инфляция'],
+[579,'finance','B2','die Hypothek','mortgage','ипотека'],
+[580,'finance','B2','der Zinssatz','interest rate','процентная ставка'],
+[581,'finance','C1','der Wechselkurs','exchange rate','обменный курс'],
+[582,'politics','B1','die Politik','politics','политика'],
+[583,'politics','B1','die Regierung','government','правительство'],
+[584,'politics','B1','das Parlament','parliament','парламент'],
+[585,'politics','B1','die Partei','party (political)','партия'],
+[586,'politics','B1','die Wahl','election','выборы'],
+[587,'politics','B1','der Bürger','citizen','гражданин'],
+[588,'politics','B1','das Gesetz','law','закон'],
+[589,'politics','B1','die Verfassung','constitution','конституция'],
+[590,'politics','B2','die Außenpolitik','foreign policy','внешняя политика'],
+[591,'politics','B2','das Referendum','referendum','референдум'],
+[592,'politics','B2','die Menschenrechte','human rights','права человека'],
+[593,'politics','B2','die Demokratie','democracy','демократия'],
+[594,'politics','C1','die Diplomatie','diplomacy','дипломатия'],
+[595,'media','B1','die Zeitung','newspaper','газета'],
+[596,'media','B1','die Zeitschrift','magazine','журнал'],
+[597,'media','B1','das Radio','radio','радио'],
+[598,'media','B1','das Fernsehen','television','телевидение'],
+[599,'media','B1','die Nachricht','news item','новость'],
+[600,'media','B1','das Interview','interview','интервью'],
+[601,'media','B2','die sozialen Medien','social media','социальные сети'],
+[602,'media','B2','der Blog','blog','блог'],
+[603,'media','B2','der Podcast','podcast','подкаст'],
+[604,'media','B2','die Zensur','censorship','цензура'],
+[605,'media','B2','die Pressefreiheit','press freedom','свобода прессы'],
+[606,'media','B2','die Schlagzeile','headline','заголовок'],
+[607,'media','C1','viral','viral','вирусный'],
+[608,'geography','A2','das Land','country','страна'],
+[609,'geography','A2','die Hauptstadt','capital city','столица'],
+[610,'geography','A2','der Kontinent','continent','континент'],
+[611,'geography','A2','der Ozean','ocean','океан'],
+[612,'geography','A2','die Insel','island','остров'],
+[613,'geography','A2','die Wüste','desert','пустыня'],
+[614,'geography','A2','der Norden','north','север'],
+[615,'geography','A2','der Süden','south','юг'],
+[616,'geography','B1','der Osten','east','восток'],
+[617,'geography','B1','der Westen','west','запад'],
+[618,'geography','B1','die Grenze','border','граница'],
+[619,'geography','B1','das Klima','climate','климат'],
+[620,'geography','B1','die Bevölkerung','population','население'],
+[621,'geography','B1','der Äquator','equator','экватор'],
+[622,'geography','B2','die Topographie','topography','топография'],
+[623,'geography','B2','die Erosion','erosion','эрозия'],
+[624,'art','B1','die Kunst','art','искусство'],
+[625,'art','B1','das Gemälde','painting','картина'],
+[626,'art','B1','die Skulptur','sculpture','скульптура'],
+[627,'art','B1','der Künstler','artist','художник'],
+[628,'art','B1','die Galerie','gallery','галерея'],
+[629,'art','B1','die Ausstellung','exhibition','выставка'],
+[630,'art','B1','der Pinsel','brush','кисть'],
+[631,'art','B1','die Leinwand','canvas','холст'],
+[632,'art','B2','der Impressionismus','impressionism','импрессионизм'],
+[633,'art','B2','der Realismus','realism','реализм'],
+[634,'art','B2','die Ästhetik','aesthetics','эстетика'],
+[635,'art','B2','das Stillleben','still life','натюрморт'],
+[636,'literature','B1','die Literatur','literature','литература'],
+[637,'literature','B1','der Roman','novel','роман'],
+[638,'literature','B1','das Gedicht','poem','стихотворение'],
+[639,'literature','B1','die Erzählung','story','рассказ'],
+[640,'literature','B1','der Autor','author','автор'],
+[641,'literature','B1','der Held','hero','герой'],
+[642,'literature','B1','das Kapitel','chapter','глава'],
+[643,'literature','B2','die Metapher','metaphor','метафора'],
+[644,'literature','B2','das Genre','genre','жанр'],
+[645,'literature','B2','die Satire','satire','сатира'],
+[646,'literature','B2','der Essay','essay','эссе'],
+[647,'literature','B2','die Biographie','biography','биография'],
+[648,'literature','C1','der Erzähler','narrator','рассказчик'],
+[649,'law','B2','das Recht','law/right','право'],
+[650,'law','B2','das Gericht','court','суд'],
+[651,'law','B2','der Angeklagte','defendant','обвиняемый'],
+[652,'law','B2','der Zeuge','witness','свидетель'],
+[653,'law','B2','das Urteil','verdict','приговор'],
+[654,'law','B2','die Strafe','punishment','наказание'],
+[655,'law','C1','die Klage','lawsuit','иск'],
+[656,'law','C1','die Berufung','appeal','апелляция'],
+[657,'law','C1','die Freiheitsstrafe','imprisonment','лишение свободы'],
+[658,'phrases','A1','Ich verstehe nicht','I don\'t understand','Я не понимаю'],
+[659,'phrases','A1','Können Sie das wiederholen?','Can you repeat that?','Можете повторить?'],
+[660,'phrases','A1','Wie bitte?','Pardon?','Простите?'],
+[661,'phrases','A1','Wo ist ...?','Where is ...?','Где находится ...?'],
+[662,'phrases','A1','Wie viel kostet das?','How much does it cost?','Сколько это стоит?'],
+[663,'phrases','A1','Hilfe!','Help!','Помогите!'],
+[664,'phrases','A1','Es tut mir leid','I\'m sorry','Мне жаль'],
+[665,'phrases','A1','Kein Problem','No problem','Нет проблем'],
+[666,'phrases','A2','Was empfehlen Sie?','What do you recommend?','Что вы рекомендуете?'],
+[667,'phrases','A2','Ich hätte gern ...','I would like ...','Я бы хотел(а) ...'],
+[668,'phrases','A2','Das gefällt mir','I like it','Мне это нравится'],
+[669,'phrases','A2','Gute Reise!','Have a good trip!','Хорошей поездки!'],
+[670,'phrases','A2','Viel Erfolg!','Good luck!','Удачи!'],
+[671,'phrases','A2','Herzlichen Glückwunsch!','Congratulations!','Поздравляю!'],
+[672,'phrases','A2','Ich bin einverstanden','I agree','Я согласен(а)'],
+[673,'phrases','B1','Das hängt davon ab','It depends','Это зависит от ...'],
+[674,'phrases','B1','Meiner Meinung nach','In my opinion','По моему мнению'],
+[675,'phrases','B1','Im Großen und Ganzen','On the whole','В целом'],
+[676,'religion','B2','die Religion','religion','религия'],
+[677,'religion','B2','der Glaube','faith/belief','вера'],
+[678,'religion','B2','die Moschee','mosque','мечеть'],
+[679,'religion','B2','die Synagoge','synagogue','синагога'],
+[680,'religion','B2','der Tempel','temple','храм'],
+[681,'religion','B2','das Gebet','prayer','молитва'],
+[682,'religion','B2','das Ritual','ritual','ритуал'],
+[683,'religion','B2','heilig','holy','святой'],
+[684,'religion','C1','die Theologie','theology','теология'],
+[685,'religion','C1','der Atheismus','atheism','атеизм'],
+[686,'philosophy','C1','die Philosophie','philosophy','философия'],
+[687,'philosophy','C1','die Ethik','ethics','этика'],
+[688,'philosophy','C1','die Logik','logic','логика'],
+[689,'philosophy','C1','das Paradox','paradox','парадокс'],
+[690,'philosophy','C1','der Nihilismus','nihilism','нигилизм'],
+[691,'philosophy','C1','der Stoizismus','stoicism','стоицизм'],
+[692,'philosophy','C2','die Dialektik','dialectics','диалектика'],
+[693,'philosophy','C2','der Determinismus','determinism','детерминизм'],
+[694,'philosophy','C2','die Phänomenologie','phenomenology','феноменология'],
+[695,'philosophy','C2','die Hermeneutik','hermeneutics','герменевтика'],
+[696,'philosophy','C2','die Teleologie','teleology','телеология'],
+[697,'psychology','C1','die Psychologie','psychology','психология'],
+[698,'psychology','C1','das Unterbewusstsein','subconscious','подсознание'],
+[699,'psychology','C1','die Kognition','cognition','познание'],
+[700,'psychology','C1','die Motivation','motivation','мотивация'],
+[701,'psychology','C1','die Persönlichkeit','personality','личность'],
+[702,'psychology','C1','das Trauma','trauma','травма'],
+[703,'psychology','C1','die Empathie','empathy','эмпатия'],
+[704,'psychology','C1','die Resilienz','resilience','жизнестойкость'],
+[705,'psychology','C1','das Selbstwertgefühl','self-esteem','самооценка'],
+[706,'psychology','C1','die Achtsamkeit','mindfulness','осознанность'],
+[707,'psychology','C1','die Introversion','introversion','интроверсия'],
+[708,'psychology','C1','die Kognitive Dissonanz','cognitive dissonance','когнитивный диссонанс'],
+[709,'advanced','C1','die Kontroverse','controversy','контроверсия'],
+[710,'advanced','C1','die Komplexität','complexity','сложность'],
+[711,'advanced','C1','die Kohärenz','coherence','когерентность'],
+[712,'advanced','C1','die Perspektive','perspective','перспектива'],
+[713,'advanced','C1','die Interpretation','interpretation','интерпретация'],
+[714,'advanced','C1','die Kritik','critique','критика'],
+[715,'advanced','C2','die Ambiguität','ambiguity','неоднозначность'],
+[716,'advanced','C2','das Dilemma','dilemma','дилемма'],
+[717,'advanced','C2','der Zynismus','cynicism','цинизм'],
+[718,'advanced','C2','die Eloquenz','eloquence','красноречие'],
+[719,'advanced','C2','die Abstraktion','abstraction','абстракция'],
+[720,'advanced','C2','jemanden im Stich lassen','to let someone down','подвести кого-то'],
+[721,'advanced','C2','auf Wolke sieben sein','to be on cloud nine','быть на седьмом небе'],
+[722,'advanced','C2','zwei Fliegen mit einer Klappe schlagen','kill two birds with one stone','убить двух зайцев'],
+[723,'advanced','C2','ins kalte Wasser springen','to take the plunge','броситься в омут с головой'],
+[724,'advanced','C2','über den Tellerrand schauen','to think outside the box','мыслить шире'],
+[725,'advanced','C2','den Kopf nicht verlieren','to keep one\'s head','не терять голову'],
+[726,'advanced','C2','auf der Hand liegen','to be obvious','лежать на поверхности'],
+[727,'advanced','C2','das Licht am Ende des Tunnels','light at the end of the tunnel','свет в конце тоннеля'],
+[728,'adjectives','B2','zuverlässig','reliable','надёжный'],
+[729,'adjectives','B2','selbstständig','independent','самостоятельный'],
+[730,'adjectives','B2','aufmerksam','attentive','внимательный'],
+[731,'adjectives','B2','bescheiden','modest','скромный'],
+[732,'adjectives','B2','rücksichtsvoll','considerate','внимательный к другим'],
+[733,'adjectives','C1','eloquent','eloquent','красноречивый'],
+[734,'adjectives','C1','ambitioniert','ambitious','амбициозный'],
+[735,'verbs','B2','erreichen','to reach/achieve','достигать'],
+[736,'verbs','B2','empfehlen','to recommend','рекомендовать'],
+[737,'verbs','B2','verbessern','to improve','улучшать'],
+[738,'verbs','B2','beschreiben','to describe','описывать'],
+[739,'verbs','B2','vorstellen','to introduce/imagine','представлять'],
+[740,'verbs','C1','analysieren','to analyse','анализировать'],
+[741,'verbs','C1','argumentieren','to argue/reason','аргументировать'],
+[742,'verbs','C1','befürworten','to advocate','поддерживать'],
+[743,'verbs','C1','berücksichtigen','to consider/take into account','учитывать'],
+[744,'verbs','C2','extrapolieren','to extrapolate','экстраполировать'],
+[745,'nature','B2','die Savanne','savanna','саванна'],
+[746,'nature','B2','das Korallenriff','coral reef','коралловый риф'],
+[747,'nature','B2','die Tundra','tundra','тундра'],
+[748,'nature','B2','der Vulkan','volcano','вулкан'],
+[749,'nature','B1','die Wiese','meadow','луг'],
+[750,'nature','B1','die Quelle','spring/source','источник'],
+[751,'weather','B2','der Hagel','hail','град'],
+[752,'weather','B2','der Monsun','monsoon','муссон'],
+[753,'weather','B2','das Tauwetter','thaw','оттепель'],
+[754,'weather','C1','der Hurrikan','hurricane','ураган'],
+[755,'weather','C1','der Tornado','tornado','торнадо'],
+[756,'health','B2','der Schlaganfall','stroke','инсульт'],
+[757,'health','B2','der Bluthochdruck','hypertension','гипертония'],
+[758,'health','B2','der Diabetes','diabetes','диабет'],
+[759,'health','C1','die Prävention','prevention','профилактика'],
+[760,'health','C1','die Immuntherapie','immunotherapy','иммунотерапия'],
+[761,'emotions','C1','überwältigt','overwhelmed','переполненный чувствами'],
+[762,'emotions','C1','gleichgültig','indifferent','равнодушный'],
+[763,'emotions','C1','nostalgisch','nostalgic','ностальгический'],
+[764,'emotions','C1','euphorisch','euphoric','эйфоричный'],
+[765,'emotions','C1','resigniert','resigned','смирившийся'],
+[766,'sports','B2','die Leichtathletik','athletics','лёгкая атлетика'],
+[767,'sports','B2','das Snowboarden','snowboarding','сноубординг'],
+[768,'sports','B2','das Boxen','boxing','бокс'],
+[769,'sports','B2','der Marathon','marathon','марафон'],
+[770,'sports','C1','der Triathlon','triathlon','триатлон'],
+[771,'technology','B2','der Prozessor','processor','процессор'],
+[772,'technology','B2','die Datenbank','database','база данных'],
+[773,'technology','B2','die Automatisierung','automation','автоматизация'],
+[774,'technology','C1','der Quantencomputer','quantum computer','квантовый компьютер'],
+[775,'technology','C1','die erweiterte Realität','augmented reality','дополненная реальность'],
+[776,'work','B2','die Unternehmenskultur','corporate culture','корпоративная культура'],
+[777,'work','B2','die Leistung','performance','производительность'],
+[778,'work','C1','die Effizienz','efficiency','эффективность'],
+[779,'work','C1','das Netzwerken','networking','нетворкинг'],
+[780,'work','C1','die Gehaltserhöhung','pay rise','повышение зарплаты'],
+[781,'travel','B2','der Reiseführer','guidebook','путеводитель'],
+[782,'travel','B2','der Ökotourismus','ecotourism','экотуризм'],
+[783,'travel','B2','die Reisekrankheit','travel sickness','укачивание'],
+[784,'travel','C1','das Backpacking','backpacking','бэкпэкинг'],
+[785,'travel','C1','die Reiseversicherung','travel insurance','туристическая страховка'],
+[786,'science','C1','die Nanotechnologie','nanotechnology','нанотехнология'],
+[787,'science','C1','die Neurologie','neurology','неврология'],
+[788,'science','C1','die Epidemiologie','epidemiology','эпидемиология'],
+[789,'science','C1','die Immunologie','immunology','иммунология'],
+[790,'science','C2','die Quantenmechanik','quantum mechanics','квантовая механика'],
+[791,'finance','C1','der Konkurs','bankruptcy','банкротство'],
+[792,'finance','C1','die Dividende','dividend','дивиденд'],
+[793,'finance','C1','das Bruttoinlandsprodukt','GDP','ВВП'],
+[794,'politics','C1','die Verfassungsbeschwerde','constitutional complaint','конституционная жалоба'],
+[795,'politics','C1','die Lobbypolitik','lobbying','лоббирование'],
+[796,'politics','C1','die Gewaltenteilung','separation of powers','разделение властей'],
+[797,'city','B2','das Industriegebiet','industrial area','промышленная зона'],
+[798,'city','B2','die Stadtplanung','urban planning','городское планирование'],
+[799,'city','B1','der Brunnen','fountain','фонтан'],
+[800,'city','B1','der Platz','square','площадь'],
+[801,'school','B2','die Chemie','chemistry','химия'],
+[802,'school','B2','die Physik','physics','физика'],
+[803,'school','B2','die Biologie','biology','биология'],
+[804,'school','C1','das Forschungsprojekt','research project','исследовательский проект'],
+[805,'school','C1','das Austauschprogramm','exchange programme','программа обмена'],
+[806,'food','B2','das Vollkorn','wholegrain','цельнозерновой'],
+[807,'food','B2','der Essig','vinegar','уксус'],
+[808,'food','B2','die Marinade','marinade','маринад'],
+[809,'food','C1','das fermentierte Lebensmittel','fermented food','ферментированный продукт'],
+[810,'food','C1','die Ballaststoffe','dietary fibre','пищевые волокна'],
+[811,'body','B2','die Wirbelsäule','spine','позвоночник'],
+[812,'body','B2','das Gelenk','joint','сустав'],
+[813,'body','B2','die Ader','vein','вена'],
+[814,'body','B2','der Blutkreislauf','blood circulation','кровообращение'],
+[815,'body','C1','das Immunsystem','immune system','иммунная система'],
+[816,'art','C1','die Avantgarde','avant-garde','авангард'],
+[817,'art','C1','das Kunsthandwerk','handicraft/craft','художественное ремесло'],
+[818,'art','C2','die ikonographie','iconography','иконография'],
+[819,'literature','C1','die Poetik','poetics','поэтика'],
+[820,'literature','C1','das Leitmotiv','leitmotif','лейтмотив'],
+[821,'literature','C2','die Allegorie','allegory','аллегория'],
+[822,'literature','C2','das Paradigma','paradigm','парадигма'],
+[823,'professions','C1','der Neurowissenschaftler','neuroscientist','нейроучёный'],
+[824,'professions','C1','der Epidemiologe','epidemiologist','эпидемиолог'],
+[825,'professions','C1','der Softwareentwickler','software developer','разработчик программного обеспечения'],
+[826,'geography','C1','die Tektonik','tectonics','тектоника'],
+[827,'geography','C1','die Geomorphologie','geomorphology','геоморфология'],
+[828,'geography','B2','die Halbinsel','peninsula','полуостров'],
+[829,'environment','C1','das Artensterben','species extinction','вымирание видов'],
+[830,'environment','C1','die Ökobilanz','ecological footprint','экологический след'],
+[831,'religion','B2','der Papst','Pope','Папа'],
+[832,'religion','B2','der Priester','priest','священник'],
+[833,'religion','C1','die Spiritualität','spirituality','духовность'],
+[834,'religion','C1','der Agnostizismus','agnosticism','агностицизм'],
+[835,'religion','C1','die Mystik','mysticism','мистицизм'],
+[836,'law','C1','die Rechtsprechung','jurisdiction','судебная практика'],
+[837,'law','C1','das Strafgesetzbuch','criminal code','уголовный кодекс'],
+[838,'law','C2','die Jurisprudenz','jurisprudence','юриспруденция'],
+[839,'law','C2','das Verfassungsgericht','constitutional court','конституционный суд'],
+[840,'law','C2','der Rechtsstaat','rule of law state','правовое государство'],
+[841,'phrases','B1','Es kommt darauf an','It depends on','Зависит от'],
+[842,'phrases','B1','Ich bin dagegen','I\'m against it','Я против'],
+[843,'phrases','B1','Ich bin dafür','I\'m in favour','Ya за'],
+[844,'phrases','B2','Aus meiner Sicht','From my perspective','С моей точки зрения'],
+[845,'phrases','B2','Soweit ich weiß','As far as I know','Насколько я знаю'],
+[846,'phrases','B2','Abgesehen davon','Apart from that','Помимо этого'],
+[847,'phrases','C1','Nichtsdestotrotz','Nevertheless','Тем не менее'],
+[848,'phrases','C1','Infolgedessen','As a result','В результате'],
+[849,'phrases','C1','Hinsichtlich','With regard to','В отношении'],
+[850,'phrases','C2','Ungeachtet dessen','Irrespective of that','Несмотря на это'],
+[851,'music','B2','der Blues','blues','блюз'],
+[852,'music','B2','der Jazz','jazz','джаз'],
+[853,'music','B2','die Klassik','classical music','классическая музыка'],
+[854,'music','B2','der Takt','beat/bar','такт'],
+[855,'music','C1','die Improvisation','improvisation','импровизация'],
+[856,'hobbies','B2','das Brettspiel','board game','настольная игра'],
+[857,'hobbies','B2','das Schach','chess','шахматы'],
+[858,'hobbies','B2','das Puzzlespielen','doing puzzles','сборка пазлов'],
+[859,'hobbies','B2','die Astronomie (Hobby)','stargazing','наблюдение за звёздами'],
+[860,'hobbies','C1','das Vlogging','vlogging','влоггинг'],
+[861,'shopping','B2','die Retoure','return/refund','возврат'],
+[862,'shopping','B2','der Online-Handel','e-commerce','электронная торговля'],
+[863,'shopping','C1','die Lieferkette','supply chain','цепь поставок'],
+[864,'restaurant','B2','das Gehäuse Ketchup','condiments','приправы'],
+[865,'restaurant','B2','das Tasting-Menü','tasting menu','дегустационное меню'],
+[866,'restaurant','C1','der Michelin-Stern','Michelin star','звезда Мишлен'],
+[867,'adjectives','C1','pragmatisch','pragmatic','прагматичный'],
+[868,'adjectives','C1','kontrovers','controversial','контроверсиальный'],
+[869,'adjectives','C2','paradox','paradoxical','парадоксальный'],
+[870,'adjectives','C2','subtil','subtle','тонкий/неуловимый'],
+[871,'verbs','C1','reflektieren','to reflect','рефлексировать'],
+[872,'verbs','C1','synthetisieren','to synthesise','синтезировать'],
+[873,'verbs','C2','konnotieren','to connote','коннотировать'],
+[874,'verbs','C2','deduktiv schließen','to deduce','дедуцировать'],
+[875,'numbers','C1','die Primzahl','prime number','простое число'],
+[876,'numbers','C1','der Bruch','fraction','дробь'],
+[877,'numbers','C1','der Exponent','exponent','показатель степени'],
+[878,'colors','C1','ocker','ochre','охра'],
+[879,'colors','C1','karmesin','crimson','карминный'],
+[880,'colors','C1','azurblau','azure','лазурный'],
+[881,'phrases','C2','Etwas unter die Lupe nehmen','to scrutinize something','рассмотреть под лупой'],
+[882,'phrases','C2','Den Faden verlieren','to lose the thread','потерять нить разговора'],
+[883,'phrases','C2','Schweres Geschütz auffahren','to bring out the big guns','пускать в ход тяжёлую артиллерию'],
+[884,'philosophy','C1','die Epistemologie','epistemology','эпистемология'],
+[885,'philosophy','C1','die Ontologie','ontology','онтология'],
+[886,'philosophy','C2','der Solipsismus','solipsism','солипсизм'],
+[887,'philosophy','C2','das Apriori','a priori','априори'],
+[888,'psychology','C1','die Kognitionspsychologie','cognitive psychology','когнитивная психология'],
+[889,'psychology','C1','das Paradigma Shift','paradigm shift','смена парадигмы'],
+[890,'psychology','C2','die Neuroplastizität','neuroplasticity','нейропластичность'],
+[891,'drinks','A2','der Orangensaft','orange juice','апельсиновый сок'],
+[892,'drinks','A2','der Apfelsaft','apple juice','яблочный сок'],
+[893,'drinks','B1','der Gin Tonic','gin and tonic','джин тоник'],
+[894,'drinks','B1','der Smoothie','smoothie','смузи'],
+[895,'drinks','B2','der Craft Beer','craft beer','ремесленное пиво'],
+[896,'animals','C1','das Beutelratte Opossum','opossum','опоссум'],
+[897,'animals','C1','der Axolotl','axolotl','аксолотль'],
+[898,'animals','B2','der Falke','falcon','сокол'],
+[899,'animals','B2','der Luchs','lynx','рысь'],
+[900,'animals','B2','der Biber','beaver','бобёр'],
+[901,'nature','C1','das Moor','moor/bog','болото'],
+[902,'nature','C1','die Steilküste','cliff coast','обрывистый берег'],
+[903,'nature','C1','das Feuchtgebiet','wetland','влажные угодья'],
+[904,'nature','B2','die Klippe','cliff','скала'],
+[905,'nature','B1','die Höhle','cave','пещера'],
+[906,'science','C1','die Stammzellen','stem cells','стволовые клетки'],
+[907,'science','C2','die Relativitätstheorie','theory of relativity','теория относительности'],
+[908,'science','C2','das Gravitationswelle','gravitational wave','гравитационная волна'],
+[909,'environment','C1','der Ökologische Fußabdruck','ecological footprint','экологический след'],
+[910,'environment','C2','die Treibhausgasemissionen','greenhouse gas emissions','выбросы парниковых газов'],
+[911,'finance','C2','das Hedging','hedging','хеджирование'],
+[912,'finance','C2','die Quantitative Lockerung','quantitative easing','количественное смягчение'],
+[913,'politics','C2','die Machtbalance','balance of power','баланс сил'],
+[914,'politics','C2','die Geopolitik','geopolitics','геополитика'],
+[915,'media','C1','der Algorithmus (Social)','social algorithm','социальный алгоритм'],
+[916,'media','C1','die Desinformation','disinformation','дезинформация'],
+[917,'media','C2','die Echokammer','echo chamber','информационный пузырь'],
+[918,'work','C2','das Employer Branding','employer branding','брендинг работодателя'],
+[919,'work','C2','die Diversität','diversity','разнообразие'],
+[920,'health','C2','die Pharmakogenetik','pharmacogenetics','фармакогенетика'],
+[921,'health','C2','die Präzisionsmedizin','precision medicine','прецизионная медицина'],
+[922,'emotions','C2','die Schadenfreude','schadenfreude','злорадость'],
+[923,'emotions','C2','das Fernweh (Gefühl)','wanderlust (feeling)','странствие ностальгии'],
+[924,'psychology','C2','die Verhaltensökonomie','behavioural economics','поведенческая экономика'],
+[925,'psychology','C2','die Positiven Psychologie','positive psychology','позитивная психология'],
+[926,'literature','C2','die Intertextualität','intertextuality','интертекстуальность'],
+[927,'literature','C2','der Postmodernismus','postmodernism','постмодернизм'],
+[928,'art','C2','die Konzeptkunst','conceptual art','концептуальное искусство'],
+[929,'art','C2','die Installation','installation art','инсталляция'],
+[930,'science','C2','die Epigenetik','epigenetics','эпигенетика'],
+[931,'technology','C2','das Edge Computing','edge computing','приграничные вычисления'],
+[932,'technology','C2','das Generative AI','generative AI','генеративный ИИ'],
+[933,'advanced','C2','in den sauren Apfel beißen','to bite the bullet','скрепя сердце'],
+[934,'advanced','C2','den Nagel auf den Kopf treffen','hit the nail on the head','попасть в точку'],
+[935,'advanced','C2','einen kühlen Kopf bewahren','to keep a cool head','сохранять хладнокровие'],
+[936,'advanced','C2','auf dem Holzweg sein','to be on the wrong track','быть на ложном пути'],
+[937,'advanced','C2','die Nase voll haben','to be fed up','быть сытым по горло'],
+[938,'adjectives','C2','eklektisch','eclectic','эклектичный'],
+[939,'adjectives','C2','hermetisch','hermetic','герметичный'],
+[940,'adjectives','C2','lapidar','terse/concise','лапидарный'],
+[941,'verbs','C2','dispensieren','to dispense with','обходиться без'],
+[942,'verbs','C2','elaborieren','to elaborate','разрабатывать подробно'],
+[943,'philosophy','C2','die Semiotik','semiotics','семиотика'],
+[944,'philosophy','C2','die Axiologie','axiology','аксиология'],
+[945,'psychology','C2','die Metakognition','metacognition','метакогниция'],
+[946,'music','C1','das Kontrapunkt','counterpoint','контрапункт'],
+[947,'music','C2','die Atonalität','atonality','атональность'],
+[948,'science','C2','die Superfluidität','superfluidity','сверхтекучесть'],
+[949,'environment','C2','die planetare Grenzen','planetary boundaries','планетарные границы'],
+[950,'law','C2','das Gewohnheitsrecht','common law','обычное право'],
+[951,'geography','C2','die Hydrologie','hydrology','гидрология'],
+[952,'religion','C2','der Synkretismus','syncretism','синкретизм'],
+[953,'art','C1','der Dadaismus','Dadaism','дадаизм'],
+[954,'literature','C1','die Prosalyrik','prose poetry','прозаическая лирика'],
+[955,'hobbies','C1','das Rollenspiel','role-playing','ролевая игра'],
+[956,'shopping','C1','die Lieferkettentransparenz','supply chain transparency','прозрачность цепи поставок'],
+[957,'restaurant','C1','die Molekularküche','molecular gastronomy','молекулярная гастрономия'],
+[958,'media','C2','der Meinungskorridor','Overton window','Окно Овертона'],
+[959,'finance','C2','die Finanzkrise','financial crisis','финансовый кризис'],
+[960,'politics','C2','die Realpolitik','realpolitik','реальполитик'],
+[961,'school','C2','die epistemische Demut','epistemic humility','эпистемная скромность'],
+[962,'professions','C2','der Ombudsmann','ombudsman','омбудсмен'],
+[963,'advanced','C2','jemanden auf den Arm nehmen','to pull someone\'s leg','водить за нос'],
+[964,'advanced','C2','zwischen den Zeilen lesen','to read between the lines','читать между строк'],
+[965,'advanced','C2','einen Nerv treffen','to hit a nerve','задеть за живое'],
+[966,'advanced','C2','das Kind beim Namen nennen','to call a spade a spade','называть вещи своими именами'],
+[967,'phrases','C1','Ich stehe auf dem Standpunkt, dass','I take the view that','Я придерживаюсь точки зрения'],
+[968,'phrases','C1','Es wäre zu kurz gegriffen zu sagen','It would be oversimplifying to say','Было бы упрощением сказать'],
+[969,'phrases','C2','Man muss das im Kontext sehen','One must see this in context','Это нужно рассматривать в контексте'],
+[970,'adjectives','C2','diametral','diametrically opposed','диаметрально противоположный'],
+[971,'verbs','C2','präzisieren','to specify precisely','уточнять'],
+[972,'verbs','C2','konsolidieren','to consolidate','консолидировать'],
+[973,'adjectives','A2','geduldig','patient','терпеливый'],
+[974,'adjectives','A2','neugierig','curious','любопытный'],
+[975,'adjectives','B1','verantwortungsbewusst','responsible','ответственный'],
+[976,'adjectives','B1','tolerant','tolerant','толерантный'],
+[977,'adjectives','B2','intelligent','intelligent','интеллектуальный'],
+[978,'adjectives','B2','empathätisch','empathetic','эмпатичный'],
+[979,'verbs','A2','kochen','to cook','готовить'],
+[980,'verbs','A2','reisen','to travel','путешествовать'],
+[981,'verbs','A2','schlafen gehen','to go to sleep','ложиться спать'],
+[982,'verbs','B1','vereinbaren','to arrange/agree','договариваться'],
+[983,'verbs','B1','beurteilen','to judge/assess','оценивать'],
+[984,'verbs','B2','nachweisen','to prove/demonstrate','доказывать'],
+[985,'verbs','B2','abwägen','to weigh up','взвешивать'],
+[986,'numbers','B1','die Million','million','миллион'],
+[987,'numbers','B1','die Milliarde','billion','миллиард'],
+[988,'numbers','B2','das Prozent','percent','процент'],
+[989,'numbers','B2','der Durchschnitt','average','среднее'],
+[990,'colors','B2','transparent','transparent','прозрачный'],
+[991,'time','B1','das Jahrzehnt','decade','десятилетие'],
+[992,'time','B1','das Jahrhundert','century','век'],
+[993,'time','B2','das Millennium','millennium','тысячелетие'],
+[994,'family','B1','der Stiefsohn','stepson','пасынок'],
+[995,'family','B1','die Stiefmutter','stepmother','мачеха'],
+[996,'family','B2','der Pate','godfather','крёстный отец'],
+[997,'family','B2','der Nachkomme','descendant','потомок'],
+[998,'advanced','C2','aus dem Nichts','out of thin air','из ничего'],
+[999,'advanced','C2','auf eigene Gefahr','at one\'s own risk','на свой страх и риск'],
+[1000,'advanced','C2','der Werdegang','career path/development','путь развития'],
+];
+
+const GRAMMAR_DB={
+  de:{
+    A1:[
+      {id:'de_a1_1',title:{de:'Artikel: der\u2013die\u2013das',en:'Articles: der\u2013die\u2013das',ru:'\u0410\u0440\u0442\u0438\u043a\u043b\u0438'},
+       content:{de:'<p class="grammar-rule">Im Deutschen hat jedes Nomen ein Geschlecht: <strong>maskulin (der)</strong>, <strong>feminin (die)</strong> oder <strong>neutral (das)</strong>. Lerne den Artikel immer mit dem Wort!</p><table class="example-table"><tr><th>Artikel</th><th>Genus</th><th>Beispiel</th></tr><tr><td><strong>der</strong></td><td>maskulin</td><td>der Mann, der Tisch</td></tr><tr><td><strong>die</strong></td><td>feminin</td><td>die Frau, die T\u00fcr</td></tr><tr><td><strong>das</strong></td><td>neutral</td><td>das Kind, das Haus</td></tr></table><div class="grammar-tip">\ud83d\udca1 Lerne immer <em>der Hund</em>, nie nur <em>Hund</em>!</div>',
+         en:'<p class="grammar-rule">Every German noun has a gender: <strong>masculine (der)</strong>, <strong>feminine (die)</strong>, or <strong>neuter (das)</strong>. Always learn the article with the word!</p><table class="example-table"><tr><th>Article</th><th>Gender</th><th>Example</th></tr><tr><td><strong>der</strong></td><td>masculine</td><td>der Mann (the man)</td></tr><tr><td><strong>die</strong></td><td>feminine</td><td>die Frau (the woman)</td></tr><tr><td><strong>das</strong></td><td>neuter</td><td>das Kind (the child)</td></tr></table>',
+         ru:'<p class="grammar-rule">\u0423 \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u043d\u0435\u043c\u0435\u0446\u043a\u043e\u0433\u043e \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0433\u043e \u0435\u0441\u0442\u044c \u0440\u043e\u0434. \u0423\u0447\u0438\u0442\u0435 \u0430\u0440\u0442\u0438\u043a\u043b\u044c \u0432\u043c\u0435\u0441\u0442\u0435 \u0441 \u0441\u043b\u043e\u0432\u043e\u043c!</p><table class="example-table"><tr><th>\u0410\u0440\u0442\u0438\u043a\u043b\u044c</th><th>\u0420\u043e\u0434</th><th>\u041f\u0440\u0438\u043c\u0435\u0440</th></tr><tr><td><strong>der</strong></td><td>\u043c\u0443\u0436\u0441\u043a\u043e\u0439</td><td>der Mann</td></tr><tr><td><strong>die</strong></td><td>\u0436\u0435\u043d\u0441\u043a\u0438\u0439</td><td>die Frau</td></tr><tr><td><strong>das</strong></td><td>\u0441\u0440\u0435\u0434\u043d\u0438\u0439</td><td>das Kind</td></tr></table>'}},
+      {id:'de_a1_2',title:{de:'Verb "sein"',en:'Verb "to be" (sein)',ru:'\u0413\u043b\u0430\u0433\u043e\u043b sein'},
+       content:{de:'<table class="example-table"><tr><th>Pronomen</th><th>sein</th><th>Beispiel</th></tr><tr><td>ich</td><td>bin</td><td>Ich bin m\u00fcde.</td></tr><tr><td>du</td><td>bist</td><td>Du bist nett.</td></tr><tr><td>er/sie/es</td><td>ist</td><td>Er ist gro\u00df.</td></tr><tr><td>wir</td><td>sind</td><td>Wir sind hier.</td></tr><tr><td>ihr</td><td>seid</td><td>Ihr seid laut.</td></tr><tr><td>sie/Sie</td><td>sind</td><td>Sie sind Lehrer.</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Pronoun</th><th>sein</th><th>Example</th></tr><tr><td>ich</td><td>bin</td><td>Ich bin m\u00fcde. (I am tired.)</td></tr><tr><td>du</td><td>bist</td><td>Du bist nett. (You are nice.)</td></tr><tr><td>er/sie/es</td><td>ist</td><td>Er ist gro\u00df. (He is tall.)</td></tr><tr><td>wir/sie/Sie</td><td>sind</td><td>Wir sind hier. (We are here.)</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u041c\u0435\u0441\u0442\u043e\u0438\u043c.</th><th>sein</th><th>\u041f\u0435\u0440\u0435\u0432\u043e\u0434</th></tr><tr><td>ich</td><td>bin</td><td>\u044f</td></tr><tr><td>du</td><td>bist</td><td>\u0442\u044b</td></tr><tr><td>er/sie/es</td><td>ist</td><td>\u043e\u043d/\u043e\u043d\u0430/\u043e\u043d\u043e</td></tr><tr><td>wir/sie/Sie</td><td>sind</td><td>\u043c\u044b/\u043e\u043d\u0438/\u0412\u044b</td></tr></table>'}},
+      {id:'de_a1_3',title:{de:'V2-Regel',en:'V2 Rule',ru:'\u041f\u0440\u0430\u0432\u0438\u043b\u043e V2'},
+       content:{de:'<p class="grammar-rule">Im deutschen Hauptsatz steht das Verb <strong>immer an zweiter Stelle</strong>.</p><table class="example-table"><tr><th>Pos. 1</th><th>Verb (2)</th><th>Rest</th></tr><tr><td>Ich</td><td>lerne</td><td>Deutsch.</td></tr><tr><td>Heute</td><td>lerne</td><td>ich Deutsch.</td></tr></table><div class="grammar-tip">\ud83d\udca1 Egal was vorne steht \u2013 Verb bleibt auf Platz 2!</div>',
+         en:'<p class="grammar-rule">In German the verb always comes in <strong>second position</strong> in main clauses.</p><table class="example-table"><tr><th>Position 1</th><th>Verb (2)</th><th>Rest</th></tr><tr><td>Ich (I)</td><td>lerne</td><td>Deutsch.</td></tr><tr><td>Heute (Today)</td><td>lerne</td><td>ich Deutsch.</td></tr></table>',
+         ru:'<p class="grammar-rule">\u0413\u043b\u0430\u0433\u043e\u043b \u0432\u0441\u0435\u0433\u0434\u0430 \u043d\u0430 <strong>\u0432\u0442\u043e\u0440\u043e\u043c \u043c\u0435\u0441\u0442\u0435</strong>.</p><table class="example-table"><tr><th>\u041f\u043e\u0437. 1</th><th>\u0413\u043b\u0430\u0433\u043e\u043b (2)</th></tr><tr><td>Ich</td><td>lerne</td></tr><tr><td>Heute</td><td>lerne</td></tr></table>'}}
+    ],
+    A2:[
+      {id:'de_a2_1',title:{de:'Akkusativ',en:'Accusative Case',ru:'\u0412\u0438\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436'},
+       content:{de:'<p class="grammar-rule">Akkusativ = direktes Objekt. Nur Maskulin \u00e4ndert sich: <em>der \u2192 den</em>.</p><table class="example-table"><tr><th>Genus</th><th>Nom.</th><th>Akk.</th></tr><tr><td>Maskulin</td><td>der</td><td>den</td></tr><tr><td>Feminin</td><td>die</td><td>die</td></tr><tr><td>Neutral</td><td>das</td><td>das</td></tr></table>',
+         en:'<p class="grammar-rule">Accusative = direct object. Only masculine changes: <em>der \u2192 den</em>.</p><table class="example-table"><tr><th>Gender</th><th>Nom.</th><th>Acc.</th></tr><tr><td>Masculine</td><td>der</td><td>den</td></tr><tr><td>Feminine</td><td>die</td><td>die (no change)</td></tr><tr><td>Neuter</td><td>das</td><td>das (no change)</td></tr></table>',
+         ru:'<p class="grammar-rule">\u0412\u0438\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436. \u0422\u043e\u043b\u044c\u043a\u043e \u043c\u0443\u0436. \u0440\u043e\u0434: der \u2192 den.</p>'}},
+      {id:'de_a2_2',title:{de:'Modalverben',en:'Modal Verbs',ru:'\u041c\u043e\u0434\u0430\u043b\u044c\u043d\u044b\u0435 \u0433\u043b\u0430\u0433\u043e\u043b\u044b'},
+       content:{de:'<table class="example-table"><tr><th>Modalverb</th><th>ich</th><th>du</th><th>er/sie</th></tr><tr><td>k\u00f6nnen</td><td>kann</td><td>kannst</td><td>kann</td></tr><tr><td>m\u00fcssen</td><td>muss</td><td>musst</td><td>muss</td></tr><tr><td>wollen</td><td>will</td><td>willst</td><td>will</td></tr><tr><td>d\u00fcrfen</td><td>darf</td><td>darfst</td><td>darf</td></tr><tr><td>sollen</td><td>soll</td><td>sollst</td><td>soll</td></tr></table><div class="grammar-tip">\ud83d\udca1 Infinitiv kommt ans Satzende: Ich <strong>kann</strong> gut Deutsch <em>sprechen</em>.</div>',
+         en:'<table class="example-table"><tr><th>Modal</th><th>ich</th><th>du</th><th>er/sie</th></tr><tr><td>k\u00f6nnen (can)</td><td>kann</td><td>kannst</td><td>kann</td></tr><tr><td>m\u00fcssen (must)</td><td>muss</td><td>musst</td><td>muss</td></tr><tr><td>wollen (want)</td><td>will</td><td>willst</td><td>will</td></tr></table><div class="grammar-tip">\ud83d\udca1 Infinitive goes to the end: Ich <strong>kann</strong> Deutsch <em>sprechen</em>.</div>',
+         ru:'<table class="example-table"><tr><th>\u0413\u043b\u0430\u0433\u043e\u043b</th><th>ich</th><th>du</th></tr><tr><td>k\u00f6nnen</td><td>kann</td><td>kannst</td></tr><tr><td>m\u00fcssen</td><td>muss</td><td>musst</td></tr><tr><td>wollen</td><td>will</td><td>willst</td></tr></table>'}}
+    ],
+    B1:[
+      {id:'de_b1_1',title:{de:'Das Perfekt',en:'Perfekt (Past)',ru:'\u041f\u0435\u0440\u0444\u0435\u043a\u0442'},
+       content:{de:'<p class="grammar-rule">Perfekt = h\u00e4ufigste Vergangenheitsform. Bildung: <em>haben/sein + Partizip II</em>.</p><table class="example-table"><tr><th>Hilfsverb</th><th>Wann?</th><th>Beispiel</th></tr><tr><td>haben</td><td>die meisten Verben</td><td>Ich habe gegessen.</td></tr><tr><td>sein</td><td>Bewegung/Zustand</td><td>Ich bin gefahren.</td></tr></table><p class="grammar-rule">Partizip II: ge-+Stamm+-t \u2192 spielen \u2192 <em>gespielt</em>. Stark: gehen \u2192 <em>gegangen</em>.</p>',
+         en:'<p class="grammar-rule">Perfekt = most common past tense. Formation: <em>haben/sein + past participle</em>.</p><table class="example-table"><tr><th>Aux.</th><th>When</th><th>Example</th></tr><tr><td>haben</td><td>most verbs</td><td>Ich habe gegessen. (I ate.)</td></tr><tr><td>sein</td><td>motion/state change</td><td>Ich bin gefahren. (I drove.)</td></tr></table>',
+         ru:'<p class="grammar-rule">Perfekt = \u043f\u0440\u043e\u0448\u0435\u0434\u0448\u0435\u0435. haben/sein + Partizip II.</p><table class="example-table"><tr><th>\u0412\u0441\u043f.</th><th>\u041f\u0440\u0438\u043c\u0435\u0440</th></tr><tr><td>haben</td><td>Ich habe gegessen.</td></tr><tr><td>sein</td><td>Ich bin gefahren.</td></tr></table>'}},
+      {id:'de_b1_2',title:{de:'Dativ',en:'Dative Case',ru:'\u0414\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436'},
+       content:{de:'<table class="example-table"><tr><th>Genus</th><th>Nom.</th><th>Dativ</th></tr><tr><td>Maskulin</td><td>der</td><td>dem</td></tr><tr><td>Feminin</td><td>die</td><td>der</td></tr><tr><td>Neutral</td><td>das</td><td>dem</td></tr><tr><td>Plural</td><td>die</td><td>den (+n)</td></tr></table><div class="grammar-tip">\ud83d\udca1 Pr\u00e4positionen mit Dativ: mit, bei, nach, seit, von, zu, aus</div>',
+         en:'<table class="example-table"><tr><th>Gender</th><th>Nom.</th><th>Dat.</th></tr><tr><td>Masculine</td><td>der</td><td>dem</td></tr><tr><td>Feminine</td><td>die</td><td>der</td></tr><tr><td>Neuter</td><td>das</td><td>dem</td></tr><tr><td>Plural</td><td>die</td><td>den (+n)</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0420\u043e\u0434</th><th>\u0418\u043c\u0435\u043d.</th><th>\u0414\u0430\u0442.</th></tr><tr><td>\u041c\u0443\u0436\u0441\u043a\u043e\u0439</td><td>der</td><td>dem</td></tr><tr><td>\u0416\u0435\u043d\u0441\u043a\u0438\u0439</td><td>die</td><td>der</td></tr><tr><td>\u0421\u0440\u0435\u0434\u043d\u0438\u0439</td><td>das</td><td>dem</td></tr></table>'}}
+    ],
+    B2:[
+      {id:'de_b2_1',title:{de:'Konjunktiv II',en:'Konjunktiv II',ru:'\u041a\u043e\u043d\u044a\u044e\u043d\u043a\u0442\u0438\u0432 II'},
+       content:{de:'<p class="grammar-rule">Konjunktiv II = Wunsch/Hypothese. Meist: <em>w\u00fcrde + Infinitiv</em>.</p><table class="example-table"><tr><th>Form</th><th>Beispiel</th></tr><tr><td>w\u00fcrde + Inf.</td><td>Ich w\u00fcrde gern reisen.</td></tr><tr><td>w\u00e4re</td><td>Wenn ich reich w\u00e4re ...</td></tr><tr><td>h\u00e4tte</td><td>Ich h\u00e4tte gern ein Bier.</td></tr></table>',
+         en:'<p class="grammar-rule">Konjunktiv II = wishes, hypotheses. Use <em>w\u00fcrde + infinitive</em>.</p><table class="example-table"><tr><th>Form</th><th>Example</th></tr><tr><td>w\u00fcrde + inf.</td><td>I would like to travel.</td></tr><tr><td>w\u00e4re</td><td>If I were rich ...</td></tr><tr><td>h\u00e4tte</td><td>I would like a beer.</td></tr></table>',
+         ru:'<p class="grammar-rule">Konjunktiv II = \u0436\u0435\u043b\u0430\u043d\u0438\u044f, \u0433\u0438\u043f\u043e\u0442\u0435\u0437\u044b. w\u00fcrde + \u0438\u043d\u0444\u0438\u043d\u0438\u0442\u0438\u0432.</p>'}},
+      {id:'de_b2_2',title:{de:'Passiv',en:'Passive Voice',ru:'\u041f\u0430\u0441\u0441\u0438\u0432\u043d\u044b\u0439 \u0437\u0430\u043b\u043e\u0433'},
+       content:{de:'<p class="grammar-rule">Passiv = werden + Partizip II.</p><table class="example-table"><tr><th>Aktiv</th><th>Passiv</th></tr><tr><td>Man baut das Haus.</td><td>Das Haus <strong>wird gebaut</strong>.</td></tr><tr><td>Man baute.</td><td>Das Haus <strong>wurde gebaut</strong>.</td></tr></table>',
+         en:'<p class="grammar-rule">Passive = werden + past participle.</p><table class="example-table"><tr><th>Active</th><th>Passive</th></tr><tr><td>They build the house.</td><td>Das Haus <strong>wird gebaut</strong>.</td></tr></table>',
+         ru:'<p class="grammar-rule">\u041f\u0430\u0441\u0441\u0438\u0432 = werden + Partizip II.</p>'}}
+    ],
+    C1:[{id:'de_c1_1',title:{de:'Konjunktiv I',en:'Konjunktiv I',ru:'\u041a\u043e\u043d\u044a\u044e\u043d\u043a\u0442\u0438\u0432 I'},
+       content:{de:'<p class="grammar-rule">Konjunktiv I = indirekte Rede (Journalismus).</p><table class="example-table"><tr><th>Direkte Rede</th><th>Indirekte Rede</th></tr><tr><td>"Ich bin krank."</td><td>Er sagt, er <strong>sei</strong> krank.</td></tr></table>',
+         en:'<p class="grammar-rule">Konjunktiv I = indirect speech (journalism).</p><table class="example-table"><tr><th>Direct</th><th>Indirect</th></tr><tr><td>"Ich bin krank."</td><td>Er sagt, er <strong>sei</strong> krank.</td></tr></table>',
+         ru:'<p class="grammar-rule">Konjunktiv I = \u043a\u043e\u0441\u0432\u0435\u043d\u043d\u0430\u044f \u0440\u0435\u0447\u044c.</p>'}}],
+    C2:[{id:'de_c2_1',title:{de:'Idiome & Stilistik',en:'Idioms & Style',ru:'\u0418\u0434\u0438\u043e\u043c\u044b'},
+       content:{de:'<table class="example-table"><tr><th>Idiom</th><th>Bedeutung</th></tr><tr><td>den Nagel auf den Kopf treffen</td><td>hit the nail on the head</td></tr><tr><td>auf dem Holzweg sein</td><td>on the wrong track</td></tr><tr><td>die Nase voll haben</td><td>be fed up</td></tr><tr><td>ins Fettn\u00e4pfchen treten</td><td>put one\'s foot in it</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Idiom</th><th>Meaning</th></tr><tr><td>den Nagel auf den Kopf treffen</td><td>hit the nail on the head</td></tr><tr><td>die Nase voll haben</td><td>be fed up</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0418\u0434\u0438\u043e\u043c\u0430</th><th>\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435</th></tr><tr><td>den Nagel auf den Kopf treffen</td><td>\u043f\u043e\u043f\u0430\u0441\u0442\u044c \u0432 \u0442\u043e\u0447\u043a\u0443</td></tr><tr><td>die Nase voll haben</td><td>\u0431\u044b\u0442\u044c \u0441\u044b\u0442\u044b\u043c \u043f\u043e \u0433\u043e\u0440\u043b\u043e</td></tr></table>'}}]
+  },
+  en:{
+    A1:[{id:'en_a1_1',title:{de:'Artikel a/an/the',en:'Articles a/an/the',ru:'\u0410\u0440\u0442\u0438\u043a\u043b\u0438'},
+       content:{de:'<table class="example-table"><tr><th>Artikel</th><th>Verwendung</th><th>Beispiel</th></tr><tr><td>a</td><td>vor Konsonant</td><td>a dog, a book</td></tr><tr><td>an</td><td>vor Vokal</td><td>an apple, an hour</td></tr><tr><td>the</td><td>bestimmt</td><td>the sun</td></tr></table><div class="grammar-tip">\ud83d\udca1 "an hour": stilles H z\u00e4hlt als Vokal!</div>',
+         en:'<table class="example-table"><tr><th>Article</th><th>Use</th><th>Example</th></tr><tr><td>a</td><td>consonant sound</td><td>a dog, a book</td></tr><tr><td>an</td><td>vowel sound</td><td>an apple, an hour</td></tr><tr><td>the</td><td>definite</td><td>the sun</td></tr></table><div class="grammar-tip">\ud83d\udca1 "an hour" \u2013 silent H counts as vowel!</div>',
+         ru:'<table class="example-table"><tr><th>\u0410\u0440\u0442\u0438\u043a\u043b\u044c</th><th>\u041f\u0440\u0438\u043c\u0435\u0440</th></tr><tr><td>a</td><td>a dog</td></tr><tr><td>an</td><td>an apple</td></tr><tr><td>the</td><td>the sun</td></tr></table>'}},
+     {id:'en_a1_2',title:{de:'Present Simple',en:'Present Simple',ru:'Present Simple'},
+       content:{de:'<p class="grammar-rule">Gewohnheiten & Fakten. Bei he/she/it: +s/-es.</p><table class="example-table"><tr><th>Person</th><th>Beispiel</th></tr><tr><td>I/you/we/they</td><td>I <strong>work</strong>.</td></tr><tr><td>he/she/it</td><td>She <strong>works</strong>.</td></tr></table>',
+         en:'<p class="grammar-rule">Habits & facts. Add -s/-es for he/she/it.</p><table class="example-table"><tr><th>Person</th><th>Example</th></tr><tr><td>I/you/we/they</td><td>I <strong>work</strong> every day.</td></tr><tr><td>he/she/it</td><td>She <strong>works</strong> every day.</td></tr></table>',
+         ru:'<p class="grammar-rule">\u041f\u0440\u0438\u0432\u044b\u0447\u043a\u0438 \u0438 \u0444\u0430\u043a\u0442\u044b. \u0414\u043b\u044f he/she/it: +s/-es.</p>'}}
+    ],
+    A2:[{id:'en_a2_1',title:{de:'Past Simple',en:'Past Simple',ru:'Past Simple'},
+       content:{de:'<table class="example-table"><tr><th>Verb</th><th>Past</th><th>Beispiel</th></tr><tr><td>work</td><td>worked</td><td>I worked yesterday.</td></tr><tr><td>go</td><td>went</td><td>She went to school.</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Verb</th><th>Past</th><th>Example</th></tr><tr><td>work</td><td>worked</td><td>I worked yesterday.</td></tr><tr><td>go (irreg.)</td><td>went</td><td>She went to school.</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0413\u043b\u0430\u0433\u043e\u043b</th><th>Past</th></tr><tr><td>work</td><td>worked</td></tr><tr><td>go</td><td>went</td></tr></table>'}}],
+    B1:[{id:'en_b1_1',title:{de:'Present Perfect',en:'Present Perfect',ru:'Present Perfect'},
+       content:{de:'<p class="grammar-rule">have/has + Partizip II. Verbindet Vergangenheit & Gegenwart.</p><table class="example-table"><tr><th>Verwendung</th><th>Beispiel</th></tr><tr><td>Erfahrungen</td><td>I have been to Japan.</td></tr><tr><td>seit/for</td><td>We have lived here for 5 years.</td></tr></table>',
+         en:'<p class="grammar-rule">have/has + past participle. Connects past to present.</p><table class="example-table"><tr><th>Use</th><th>Example</th></tr><tr><td>Experience</td><td>I have been to Japan.</td></tr><tr><td>Duration</td><td>We have lived here for 5 years.</td></tr></table><div class="grammar-tip">\ud83d\udca1 With specific times use Past Simple: "I went in 2019."</div>',
+         ru:'<p class="grammar-rule">have/has + \u043f\u0440\u0438\u0447\u0430\u0441\u0442\u0438\u0435. \u0421\u0432\u044f\u0437\u044b\u0432\u0430\u0435\u0442 \u043f\u0440\u043e\u0448\u043b\u043e\u0435 \u0441 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u043c.</p>'}}],
+    B2:[{id:'en_b2_1',title:{de:'Conditionals',en:'Conditionals',ru:'\u0423\u0441\u043b\u043e\u0432\u043d\u044b\u0435 \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u044f'},
+       content:{de:'<table class="example-table"><tr><th>Typ</th><th>Struktur</th><th>Beispiel</th></tr><tr><td>1st</td><td>if+pres., will</td><td>If it rains, I\'ll stay.</td></tr><tr><td>2nd</td><td>if+past, would</td><td>If I were rich, I would travel.</td></tr><tr><td>3rd</td><td>if+past perf., would have</td><td>If she had studied, she would have passed.</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Type</th><th>Structure</th><th>Example</th></tr><tr><td>1st</td><td>if+present, will</td><td>If it rains, I\'ll stay.</td></tr><tr><td>2nd</td><td>if+past, would</td><td>If I were rich, I would travel.</td></tr><tr><td>3rd</td><td>if+past perfect, would have</td><td>If she had studied, she would have passed.</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0422\u0438\u043f</th><th>\u0421\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430</th></tr><tr><td>1st</td><td>if+present, will</td></tr><tr><td>2nd</td><td>if+past, would</td></tr><tr><td>3rd</td><td>if+past perfect, would have</td></tr></table>'}}],
+    C1:[{id:'en_c1_1',title:{de:'Inversion & Emphasis',en:'Inversion & Cleft Sentences',ru:'\u0418\u043d\u0432\u0435\u0440\u0441\u0438\u044f'},
+       content:{de:'<table class="example-table"><tr><th>Struktur</th><th>Beispiel</th></tr><tr><td>Inversion</td><td>Never have I seen such beauty.</td></tr><tr><td>Cleft</td><td>It was John who called.</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Structure</th><th>Example</th></tr><tr><td>Inversion</td><td>Never have I seen such beauty.</td></tr><tr><td>Cleft sentence</td><td>It was John who called.</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0421\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430</th><th>\u041f\u0440\u0438\u043c\u0435\u0440</th></tr><tr><td>\u0418\u043d\u0432\u0435\u0440\u0441\u0438\u044f</td><td>Never have I seen ...</td></tr></table>'}}],
+    C2:[{id:'en_c2_1',title:{de:'Englische Idiome',en:'English Idioms',ru:'\u0410\u043d\u0433\u043b\u0438\u0439\u0441\u043a\u0438\u0435 \u0438\u0434\u0438\u043e\u043c\u044b'},
+       content:{de:'<table class="example-table"><tr><th>Idiom</th><th>Bedeutung</th></tr><tr><td>bite the bullet</td><td>die Z\u00e4hne zusammenbeißen</td></tr><tr><td>break the ice</td><td>das Eis brechen</td></tr><tr><td>cost an arm and a leg</td><td>ein Verm\u00f6gen kosten</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Idiom</th><th>Meaning</th></tr><tr><td>bite the bullet</td><td>endure something painful</td></tr><tr><td>break the ice</td><td>ease tension</td></tr><tr><td>cost an arm and a leg</td><td>be very expensive</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0418\u0434\u0438\u043e\u043c\u0430</th><th>\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435</th></tr><tr><td>bite the bullet</td><td>\u0441\u0442\u0438\u0441\u043d\u0443\u0442\u044c \u0437\u0443\u0431\u044b</td></tr></table>'}}]
+  },
+  ru:{
+    A1:[{id:'ru_a1_1',title:{de:'Kyrillisches Alphabet',en:'Cyrillic Alphabet',ru:'\u041a\u0438\u0440\u0438\u043b\u043b\u0438\u0446\u0430'},
+       content:{de:'<table class="example-table"><tr><th>Buchstabe</th><th>Laut</th><th>Beispiel</th></tr><tr><td>А а</td><td>[a]</td><td>\u0430\u0438\u0441\u0442 (Storch)</td></tr><tr><td>В в</td><td>[v]</td><td>\u0432\u043e\u0434\u0430 (Wasser)</td></tr><tr><td>Р р</td><td>[r] gerollt</td><td>\u0440\u044b\u0431\u0430 (Fisch)</td></tr><tr><td>С с</td><td>[s]</td><td>\u0441\u043b\u043e\u0432\u043e (Wort)</td></tr><tr><td>Х х</td><td>[ch]</td><td>\u0445\u043b\u0435\u0431 (Brot)</td></tr></table><div class="grammar-tip">\ud83d\udca1 Р sieht wie R aus \u2013 ist aber gerollt. С sieht wie C \u2013 klingt wie S!</div>',
+         en:'<table class="example-table"><tr><th>Letter</th><th>Sound</th><th>Example</th></tr><tr><td>А а</td><td>[a]</td><td>\u0430\u0438\u0441\u0442 (stork)</td></tr><tr><td>В в</td><td>[v]</td><td>\u0432\u043e\u0434\u0430 (water)</td></tr><tr><td>Р р</td><td>[r] rolled</td><td>\u0440\u044b\u0431\u0430 (fish)</td></tr><tr><td>С с</td><td>[s] not C!</td><td>\u0441\u043b\u043e\u0432\u043e (word)</td></tr></table><div class="grammar-tip">\ud83d\udca1 Р=looks like R, sounds like r; С=looks like C, sounds like S; Н=looks like H, sounds like N!</div>',
+         ru:'<p class="grammar-rule">\u0412 \u0440\u0443\u0441\u0441\u043a\u043e\u043c \u0430\u043b\u0444\u0430\u0432\u0438\u0442\u0435 33 \u0431\u0443\u043a\u0432\u044b. \u041d\u0435\u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u043f\u043e\u0445\u043e\u0436\u0438 \u043d\u0430 \u043b\u0430\u0442\u0438\u043d\u0441\u043a\u0438\u0435, \u043d\u043e \u0437\u0432\u0443\u0447\u0430\u0442 \u0438\u043d\u0430\u0447\u0435.</p>'}}],
+    A2:[{id:'ru_a2_1',title:{de:'Russische Kasus',en:'Russian Cases',ru:'\u041f\u0430\u0434\u0435\u0436\u0438'},
+       content:{de:'<table class="example-table"><tr><th>Kasus</th><th>Frage</th><th>Beispiel</th></tr><tr><td>Nominativ</td><td>Wer/Was?</td><td>\u043a\u043d\u0438\u0433\u0430</td></tr><tr><td>Genitiv</td><td>Wessen?</td><td>\u043a\u043d\u0438\u0433\u0438</td></tr><tr><td>Dativ</td><td>Wem?</td><td>\u043a\u043d\u0438\u0433\u0435</td></tr><tr><td>Akkusativ</td><td>Wen/Was?</td><td>\u043a\u043d\u0438\u0433\u0443</td></tr><tr><td>Instrumental</td><td>Womit?</td><td>\u043a\u043d\u0438\u0433\u043e\u0439</td></tr><tr><td>Pr\u00e4positional</td><td>Wor\u00fcber?</td><td>\u043e \u043a\u043d\u0438\u0433\u0435</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Case</th><th>Question</th><th>Example (\u043a\u043d\u0438\u0433\u0430=book)</th></tr><tr><td>Nominative</td><td>Who/What?</td><td>\u043a\u043d\u0438\u0433\u0430</td></tr><tr><td>Genitive</td><td>Whose?</td><td>\u043a\u043d\u0438\u0433\u0438</td></tr><tr><td>Dative</td><td>To whom?</td><td>\u043a\u043d\u0438\u0433\u0435</td></tr><tr><td>Accusative</td><td>Whom/What?</td><td>\u043a\u043d\u0438\u0433\u0443</td></tr><tr><td>Instrumental</td><td>With what?</td><td>\u043a\u043d\u0438\u0433\u043e\u0439</td></tr><tr><td>Prepositional</td><td>About?</td><td>\u043e \u043a\u043d\u0438\u0433\u0435</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u041f\u0430\u0434\u0435\u0436</th><th>\u0412\u043e\u043f\u0440\u043e\u0441</th><th>\u041f\u0440\u0438\u043c\u0435\u0440</th></tr><tr><td>\u0418\u043c\u0435\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439</td><td>\u043a\u0442\u043e? \u0447\u0442\u043e?</td><td>\u043a\u043d\u0438\u0433\u0430</td></tr><tr><td>\u0420\u043e\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439</td><td>\u043a\u043e\u0433\u043e? \u0447\u0435\u0433\u043e?</td><td>\u043a\u043d\u0438\u0433\u0438</td></tr><tr><td>\u0414\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439</td><td>\u043a\u043e\u043c\u0443? \u0447\u0435\u043c\u0443?</td><td>\u043a\u043d\u0438\u0433\u0435</td></tr><tr><td>\u0412\u0438\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439</td><td>\u043a\u043e\u0433\u043e? \u0447\u0442\u043e?</td><td>\u043a\u043d\u0438\u0433\u0443</td></tr></table>'}}],
+    B1:[{id:'ru_b1_1',title:{de:'Verbalaspekt',en:'Verbal Aspect',ru:'\u0412\u0438\u0434 \u0433\u043b\u0430\u0433\u043e\u043b\u0430'},
+       content:{de:'<table class="example-table"><tr><th>Imperfektiv</th><th>Perfektiv</th></tr><tr><td>\u0447\u0438\u0442\u0430\u0442\u044c (lesen)</td><td>\u043f\u0440\u043e\u0447\u0438\u0442\u0430\u0442\u044c (fertig lesen)</td></tr><tr><td>\u043f\u0438\u0441\u0430\u0442\u044c (schreiben)</td><td>\u043d\u0430\u043f\u0438\u0441\u0430\u0442\u044c (fertig schreiben)</td></tr></table><div class="grammar-tip">\ud83d\udca1 Perfektiv kann nicht im Pr\u00e4sens stehen!</div>',
+         en:'<table class="example-table"><tr><th>Imperfective</th><th>Perfective</th></tr><tr><td>\u0447\u0438\u0442\u0430\u0442\u044c (reading, general)</td><td>\u043f\u0440\u043e\u0447\u0438\u0442\u0430\u0442\u044c (finish reading)</td></tr><tr><td>\u043f\u0438\u0441\u0430\u0442\u044c (writing)</td><td>\u043d\u0430\u043f\u0438\u0441\u0430\u0442\u044c (finish writing)</td></tr></table><div class="grammar-tip">\ud83d\udca1 Perfective verbs cannot be used in present tense!</div>',
+         ru:'<table class="example-table"><tr><th>\u041d\u0421\u0412</th><th>\u0421\u0412</th></tr><tr><td>\u0447\u0438\u0442\u0430\u0442\u044c</td><td>\u043f\u0440\u043e\u0447\u0438\u0442\u0430\u0442\u044c</td></tr><tr><td>\u043f\u0438\u0441\u0430\u0442\u044c</td><td>\u043d\u0430\u043f\u0438\u0441\u0430\u0442\u044c</td></tr></table><div class="grammar-tip">\ud83d\udca1 \u0421\u043e\u0432\u0435\u0440\u0448\u0435\u043d\u043d\u044b\u0439 \u0432\u0438\u0434 \u043d\u0435 \u0443\u043f\u043e\u0442\u0440\u0435\u0431\u043b\u044f\u0435\u0442\u0441\u044f \u0432 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0435\u043c \u0432\u0440\u0435\u043c\u0435\u043d\u0438!</div>'}}],
+    B2:[{id:'ru_b2_1',title:{de:'Partizipien',en:'Russian Participles',ru:'\u041f\u0440\u0438\u0447\u0430\u0441\u0442\u0438\u044f'},
+       content:{de:'<table class="example-table"><tr><th>Typ</th><th>Beispiel</th></tr><tr><td>Pr\u00e4s. Aktiv</td><td>\u0447\u0438\u0442\u0430\u044e\u0449\u0438\u0439 \u0441\u0442\u0443\u0434\u0435\u043d\u0442</td></tr><tr><td>Deeprichastie</td><td>\u0427\u0438\u0442\u0430\u044f \u043a\u043d\u0438\u0433\u0443, \u043e\u043d \u0434\u0443\u043c\u0430\u043b.</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Type</th><th>Example</th></tr><tr><td>Present Active</td><td>\u0447\u0438\u0442\u0430\u044e\u0449\u0438\u0439 \u0441\u0442\u0443\u0434\u0435\u043d\u0442 (the reading student)</td></tr><tr><td>Gerund</td><td>\u0427\u0438\u0442\u0430\u044f \u043a\u043d\u0438\u0433\u0443, \u043e\u043d \u0434\u0443\u043c\u0430\u043b. (Reading the book, he thought.)</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0422\u0438\u043f</th><th>\u041f\u0440\u0438\u043c\u0435\u0440</th></tr><tr><td>\u0414\u0435\u0439\u0441\u0442\u0432. \u043d\u0430\u0441\u0442.</td><td>\u0447\u0438\u0442\u0430\u044e\u0449\u0438\u0439 \u0441\u0442\u0443\u0434\u0435\u043d\u0442</td></tr><tr><td>\u0414\u0435\u0435\u043f\u0440\u0438\u0447\u0430\u0441\u0442\u0438\u0435</td><td>\u0427\u0438\u0442\u0430\u044f, \u043e\u043d \u0434\u0443\u043c\u0430\u043b.</td></tr></table>'}}],
+    C1:[{id:'ru_c1_1',title:{de:'Russische Stilistik',en:'Russian Stylistics',ru:'\u0421\u0442\u0438\u043b\u0438\u0441\u0442\u0438\u043a\u0430'},
+       content:{de:'<table class="example-table"><tr><th>Stil</th><th>Beispiel</th></tr><tr><td>Umgangssprache</td><td>\u041b\u0430\u0434\u043d\u043e, \u0434\u043e\u0433\u043e\u0432\u043e\u0440\u0438\u043b\u0438\u0441\u044c.</td></tr><tr><td>Neutral</td><td>\u0425\u043e\u0440\u043e\u0448\u043e, \u043c\u044b \u0441\u043e\u0433\u043b\u0430\u0441\u043d\u044b.</td></tr><tr><td>Offiziell</td><td>\u041d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u043c \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u043c.</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Style</th><th>Example</th></tr><tr><td>Colloquial</td><td>\u041b\u0430\u0434\u043d\u043e, \u0434\u043e\u0433\u043e\u0432\u043e\u0440\u0438\u043b\u0438\u0441\u044c. (Alright, deal.)</td></tr><tr><td>Neutral</td><td>\u0425\u043e\u0440\u043e\u0448\u043e, \u043c\u044b \u0441\u043e\u0433\u043b\u0430\u0441\u043d\u044b.</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0421\u0442\u0438\u043b\u044c</th><th>\u041f\u0440\u0438\u043c\u0435\u0440</th></tr><tr><td>\u0420\u0430\u0437\u0433\u043e\u0432\u043e\u0440\u043d\u044b\u0439</td><td>\u041b\u0430\u0434\u043d\u043e, \u0434\u043e\u0433\u043e\u0432\u043e\u0440\u0438\u043b\u0438\u0441\u044c.</td></tr><tr><td>\u041d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u044b\u0439</td><td>\u0425\u043e\u0440\u043e\u0448\u043e, \u043c\u044b \u0441\u043e\u0433\u043b\u0430\u0441\u043d\u044b.</td></tr></table>'}}],
+    C2:[{id:'ru_c2_1',title:{de:'Russische Phraseologie',en:'Russian Idioms',ru:'\u0424\u0440\u0430\u0437\u0435\u043e\u043b\u043e\u0433\u0438\u044f'},
+       content:{de:'<table class="example-table"><tr><th>Redewendung</th><th>Bedeutung</th></tr><tr><td>\u0412\u0435\u0448\u0430\u0442\u044c \u043b\u0430\u043f\u0448\u0443 \u043d\u0430 \u0443\u0448\u0438</td><td>t\u00e4uschen</td></tr><tr><td>\u0411\u0438\u0442\u044c \u0431\u0430\u043a\u043b\u0443\u0448\u0438</td><td>faulenzen</td></tr><tr><td>\u041d\u0438 \u0440\u044b\u0431\u0430 \u043d\u0438 \u043c\u044f\u0441\u043e</td><td>weder Fisch noch Fleisch</td></tr></table>',
+         en:'<table class="example-table"><tr><th>Idiom</th><th>Meaning</th></tr><tr><td>\u0412\u0435\u0448\u0430\u0442\u044c \u043b\u0430\u043f\u0448\u0443 \u043d\u0430 \u0443\u0448\u0438</td><td>to deceive someone</td></tr><tr><td>\u0411\u0438\u0442\u044c \u0431\u0430\u043a\u043b\u0443\u0448\u0438</td><td>to idle</td></tr></table>',
+         ru:'<table class="example-table"><tr><th>\u0424\u0440\u0430\u0437\u0435\u043e\u043b\u043e\u0433\u0438\u0437\u043c</th><th>\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435</th></tr><tr><td>\u0412\u0435\u0448\u0430\u0442\u044c \u043b\u0430\u043f\u0448\u0443 \u043d\u0430 \u0443\u0448\u0438</td><td>\u043e\u0431\u043c\u0430\u043d\u044b\u0432\u0430\u0442\u044c</td></tr><tr><td>\u0411\u0438\u0442\u044c \u0431\u0430\u043a\u043b\u0443\u0448\u0438</td><td>\u0431\u0435\u0437\u0434\u0435\u043b\u044c\u043d\u0438\u0447\u0430\u0442\u044c</td></tr></table>'}}]
+  }
+};
+
+const STATE_KEY='semanteq_v2';
+let S={uiLang:'de',learnFrom:'de',learnTo:'en',level:'A1',claudeKey:'',geminiKey:'',deeplKey:'',aiProvider:'claude',speechRate:1.0,progress:{},xp:0,streak:0,lastActivity:null,dailyGoal:20,dailyDone:0,chatMessages:[],vocabTopic:'greetings',vocabMode:'fc'};
+function loadState(){try{const d=localStorage.getItem(STATE_KEY);if(d){const p=JSON.parse(d);Object.assign(S,p);}}catch(e){}}
+function saveState(){try{localStorage.setItem(STATE_KEY,JSON.stringify(S));}catch(e){}}
+loadState();
+
+const t=k=>(T[S.uiLang]||T.de)[k]||k;
+const langLabel=lc=>LANGS[lc]?.label[S.uiLang]||lc.toUpperCase();
+const topicLabel=id=>TOPIC_LABELS[id]?.[S.uiLang]||id;
+const flag=lc=>LANGS[lc]?.flag||'';
+
+function showToast(msg,dur=2200){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),dur);}
+function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-overlay').classList.add('show');}
+function closeModal(e){if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('show');}
+function forceCloseModal(){document.getElementById('modal-overlay').classList.remove('show');}
+function updateI18n(){document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));const lf=document.getElementById('ui-lang-flag'),lc=document.getElementById('ui-lang-code');if(lf)lf.textContent=flag(S.uiLang);if(lc)lc.textContent=S.uiLang.toUpperCase();}
+function addXP(n){S.xp+=n;S.dailyDone=Math.min(S.dailyDone+1,S.dailyGoal);saveState();}
+
+let currentView='home';
+function navigate(view){currentView=view;document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===view));renderView(view);}
+function renderView(view){const el=document.getElementById('views');el.scrollTop=0;switch(view){case 'home':el.innerHTML=renderHome();break;case 'vocab':el.innerHTML=renderVocabSetup();afterVocabSetup();break;case 'grammar':el.innerHTML=renderGrammar();break;case 'translate':el.innerHTML=renderTranslate();afterTranslate();break;case 'speech':el.innerHTML=renderSpeech();afterSpeech();break;case 'settings':el.innerHTML=renderSettings();break;}}
+
+function openLangModal(){
+  openModal(`<div class="modal-title">${t('ui_lang')}</div>${['de','en','ru'].map(lc=>`<div onclick="setUiLang('${lc}')" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;cursor:pointer;background:${S.uiLang===lc?'var(--primary-xlight)':'transparent'};border:${S.uiLang===lc?'1.5px solid var(--border2)':'1.5px solid transparent'};margin-bottom:8px"><span style="font-size:26px">${flag(lc)}</span><div><div style="font-size:15px;font-weight:800;color:${S.uiLang===lc?'var(--primary)':'var(--text)'}">${LANGS[lc].label[S.uiLang]}</div><div style="font-size:12px;color:var(--text3);font-weight:600">${LANGS[lc].label[lc]}</div></div>${S.uiLang===lc?'<div style="margin-left:auto;color:var(--accent);font-size:18px">&#10003;</div>':''}</div>`).join('')}<button class="btn btn-ghost btn-full" style="margin-top:6px" onclick="forceCloseModal()">${t('cancel')}</button>`);
+}
+function setUiLang(lc){S.uiLang=lc;saveState();forceCloseModal();updateI18n();renderView(currentView);}
+
+function renderHome(){
+  const prog=Math.min(S.dailyDone/S.dailyGoal,1),offset=220-(220*prog);
+  const tip=(TIPS[S.uiLang]||TIPS.de)[new Date().getDay()%(TIPS[S.uiLang]||TIPS.de).length];
+  const vocabCnt=VOCAB.length;
+  return `<div class="view">
+    <div class="greeting-card">
+      <div class="greeting-text">${t('welcome')}</div>
+      <div class="greeting-sub">${t('learndir')}: ${flag(S.learnFrom)} &#x2192; ${flag(S.learnTo)} &nbsp;|&nbsp; ${S.level}</div>
+      <div class="lang-pair-badge">${langLabel(S.learnFrom)} <span class="arrow">&#x279C;</span> ${langLabel(S.learnTo)}</div>
+    </div>
+    <div class="row">
+      <div class="stat-card"><div class="stat-icon">&#x1F525;</div><div class="stat-val">${S.streak}</div><div class="stat-lbl">${t('streak')}</div></div>
+      <div class="stat-card" style="flex:2;padding:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <svg class="ring-svg" width="72" height="72" viewBox="0 0 80 80">
+            <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1B6AF0"/><stop offset="100%" stop-color="#3DD68C"/></linearGradient></defs>
+            <circle class="ring-bg" cx="40" cy="40" r="35"/>
+            <circle class="ring-fg" cx="40" cy="40" r="35" style="stroke-dashoffset:${offset}"/>
+            <text class="ring-text" x="40" y="44" text-anchor="middle">${S.dailyDone}</text>
+            <text class="ring-sub" x="40" y="56" text-anchor="middle">${t('prog_of')} ${S.dailyGoal}</text>
+          </svg>
+          <div><div style="font-size:11px;font-weight:700;color:var(--text3)">${t('daily_goal')}</div><div style="font-size:20px;font-weight:900;color:var(--primary)">${Math.round(prog*100)}%</div></div>
+        </div>
+      </div>
+      <div class="stat-card"><div class="stat-icon">&#11088;</div><div class="stat-val">${S.xp}</div><div class="stat-lbl">${t('xp')}</div></div>
+    </div>
+    <div class="quick-actions">
+      <div class="quick-card qc-blue" onclick="navigate('vocab')"><div class="quick-card-icon">&#x1F4DA;</div><div class="quick-card-title">${t('continue_lrn')}</div><div class="quick-card-sub">${vocabCnt} ${t('words_lbl')}</div></div>
+      <div class="quick-card qc-green" onclick="navigate('translate')"><div class="quick-card-icon">&#x1F310;</div><div class="quick-card-title">${t('quick_tr')}</div><div class="quick-card-sub">${langLabel(S.learnFrom)} &#x21C4; ${langLabel(S.learnTo)}</div></div>
+    </div>
+    <div class="tip-card"><div class="tip-label">&#x1F4A1; ${t('tip_label')}</div><div class="tip-text">${tip}</div></div>
+    <div class="app-footer">${BUILD.dev} &nbsp;&#xB7;&nbsp; ${t('version')} ${BUILD.version} &nbsp;&#xB7;&nbsp; ${BUILD.date}</div>
+  </div>`;
+}
+
+function renderVocabSetup(){
+  const topics=Object.keys(TOPIC_LABELS);const levels=['A1','A2','B1','B2','C1','C2'];
+  const modes=[{id:'fc',icon:'&#x1F0CF;',label:t('mode_fc')},{id:'quiz',icon:'&#x2753;',label:t('mode_quiz')},{id:'write',icon:'&#x270F;',label:t('mode_write')}];
+  return `<div class="view">
+    <div class="view-title">${t('vocab_title')}</div>
+    <div class="view-sub">${flag(S.learnFrom)} ${langLabel(S.learnFrom)} &#x2192; ${flag(S.learnTo)} ${langLabel(S.learnTo)}</div>
+    <div class="ai-gen-card">
+      <div class="ai-gen-title">&#x2728; ${t('generate')}</div>
+      <div class="ai-gen-sub">KI generiert 8 neue W\u00f6rter f\u00fcr ein Thema</div>
+      <div class="ai-gen-row"><input class="inp" id="ai-gen-inp" placeholder="z.B. K\u00fcche, Sport ..." type="text"><button class="btn btn-accent btn-sm" id="ai-gen-btn" onclick="runAIGen()"><span id="ai-gen-label">${t('gen_btn')}</span></button></div>
+      <div id="ai-gen-result" style="margin-top:10px"></div>
+    </div>
+    <div class="section-label">${t('topic')}</div>
+    <div class="chips" id="topic-chips">${topics.map(tp=>`<div class="chip${S.vocabTopic===tp?' active':''}" onclick="setVocabTopic('${tp}')">${topicLabel(tp)}</div>`).join('')}</div>
+    <div class="section-label">${t('lvl')}</div>
+    <div class="tabs">${levels.map(lv=>`<button class="tab${S.level===lv?' active':''}" onclick="setLevel('${lv}')">${lv}</button>`).join('')}</div>
+    <div class="section-label">${t('mode')}</div>
+    <div class="row" style="margin-bottom:14px">${modes.map(m=>`<div class="card" style="text-align:center;cursor:pointer;flex:1;border:2px solid ${S.vocabMode===m.id?'var(--primary)':'var(--border)'};" onclick="setVocabMode('${m.id}')"><div style="font-size:20px">${m.icon}</div><div style="font-size:11px;font-weight:800;color:${S.vocabMode===m.id?'var(--primary)':'var(--text2)'};">${m.label}</div></div>`).join('')}</div>
+    <div id="vocab-count" style="font-size:13px;color:var(--text3);font-weight:600;margin-bottom:12px;text-align:center"></div>
+    <button class="btn btn-primary btn-full" onclick="startVocabSession()">&#x25B6; ${t('start_session')}</button>
+  </div>`;
+}
+function afterVocabSetup(){updateVocabCount();}
+function updateVocabCount(){const cnt=getVocabCards().length;const el=document.getElementById('vocab-count');if(el)el.textContent=`${cnt} ${t('words_lbl')} \u00b7 ${topicLabel(S.vocabTopic)} \u00b7 ${S.level}`;}
+function setVocabTopic(tp){S.vocabTopic=tp;saveState();document.querySelectorAll('#topic-chips .chip').forEach(c=>c.classList.toggle('active',c.textContent===topicLabel(tp)));updateVocabCount();}
+function setLevel(lv){S.level=lv;saveState();document.querySelectorAll('.tabs .tab').forEach(c=>c.classList.toggle('active',c.textContent===lv));updateVocabCount();}
+function setVocabMode(m){S.vocabMode=m;saveState();renderView('vocab');}
+function getVocabCards(){return VOCAB.filter(v=>v[1]===S.vocabTopic&&v[2]===S.level);}
+
+let session=null;
+function startVocabSession(){
+  let cards=getVocabCards();
+  if(!cards.length)cards=VOCAB.filter(v=>v[2]===S.level);
+  if(!cards.length){showToast('Keine W\u00f6rter f\u00fcr diese Auswahl.');return;}
+  cards=cards.sort(()=>Math.random()-.5).slice(0,20);
+  session={cards,idx:0,correct:0,wrong:0,flipped:false};
+  renderSession();
+}
+function renderSession(){
+  if(!session)return;
+  const views=document.getElementById('views');
+  const card=session.cards[session.idx];
+  if(!card){renderSessionResults();return;}
+  const LI=['de','en','ru'],fi=LI.indexOf(S.learnFrom),ti=LI.indexOf(S.learnTo);
+  const fw=card[3+fi],tw=card[3+ti];
+  const prog=(session.idx/session.cards.length)*100;
+  const ctr=`<div class="fc-counter">${session.idx+1} ${t('prog_of')} ${session.cards.length} &nbsp;&#xB7;&nbsp; <span class="badge badge-${S.level}">${S.level}</span></div>`;
+  const pb=`<div class="fc-progress-bar"><div class="fc-progress-fill" style="width:${prog}%"></div></div>`;
+  const cancel=`<div style="text-align:center;margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="navigate('vocab')">${t('cancel_session')}</button></div>`;
+  const fwS=fw.replace(/'/g,"\\'"),twS=tw.replace(/'/g,"\\'");
+  if(S.vocabMode==='fc'){
+    views.innerHTML=`<div class="view">${ctr}${pb}<div id="fc-scene" onclick="flipCard()"><div class="fc-card" id="fc-card"><div class="fc-front"><div class="fc-topic">${topicLabel(card[1])}</div><div class="fc-word">${fw}</div><div class="fc-hint">${flag(S.learnFrom)} &nbsp; ${t('show_ans')}</div></div><div class="fc-back"><div class="fc-topic">${topicLabel(card[1])}</div><div class="fc-word" style="color:var(--primary)">${tw}</div><div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:13px;color:var(--text3)">${flag(S.learnTo)}</span><button class="tts-btn" onclick="speakWord('${twS}','${S.learnTo}');event.stopPropagation()">&#x1F50A;</button></div></div></div></div><div class="fc-actions" id="fc-actions" style="display:none"><button class="fc-btn fc-btn-wrong" onclick="fcAnswer(false)">${t('didnt')}</button><button class="fc-btn fc-btn-right" onclick="fcAnswer(true)">${t('knew')}</button></div>${cancel}</div>`;
+  }else if(S.vocabMode==='quiz'){
+    const opts=genQuizOpts(card,ti);
+    views.innerHTML=`<div class="view">${ctr}${pb}<div class="card" style="text-align:center;padding:26px 20px;margin-bottom:0"><div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;margin-bottom:8px">${flag(S.learnFrom)} ${topicLabel(card[1])}</div><div style="font-size:26px;font-weight:900">${fw}</div></div><div class="quiz-options">${opts.map((o,i)=>`<button class="quiz-opt" id="qopt-${i}" onclick="quizAns(${i},${o.c},'${twS}')">${o.t}</button>`).join('')}</div>${cancel}</div>`;
+  }else{
+    views.innerHTML=`<div class="view">${ctr}${pb}<div class="card" style="text-align:center;padding:26px 20px;margin-bottom:0"><div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;margin-bottom:8px">${flag(S.learnFrom)} ${topicLabel(card[1])}</div><div style="font-size:26px;font-weight:900">${fw}</div><button class="tts-btn" style="margin:8px auto 0;display:flex" onclick="speakWord('${fwS}','${S.learnFrom}')">&#x1F50A;</button></div><div style="margin-top:14px"><input class="inp" id="write-inp" placeholder="${t('write_answer')}" style="font-size:16px;padding:14px" onkeydown="if(event.key==='Enter')checkWrite('${twS}')"><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary" style="flex:1" onclick="checkWrite('${twS}')">${t('check')}</button><button class="btn btn-ghost btn-sm" onclick="showHint('${twS}')">${t('hint')}</button></div><div id="write-fb" style="margin-top:10px;min-height:36px"></div></div>${cancel}</div>`;
+    setTimeout(()=>document.getElementById('write-inp')?.focus(),80);
+  }
+}
+function flipCard(){const c=document.getElementById('fc-card');if(c){c.classList.toggle('flipped');session.flipped=!session.flipped;if(session.flipped)document.getElementById('fc-actions').style.display='flex';}}
+function fcAnswer(ok){if(ok){session.correct++;addXP(5);}else{session.wrong++;}session.idx++;renderSession();}
+function genQuizOpts(card,ti){const correct=card[3+ti];const pool=VOCAB.filter(v=>v[0]!==card[0]).sort(()=>Math.random()-.5).slice(0,3).map(v=>({t:v[3+ti],c:false}));return [...pool,{t:correct,c:true}].sort(()=>Math.random()-.5);}
+function quizAns(idx,ok,correctText){const btns=document.querySelectorAll('.quiz-opt');btns.forEach((b,i)=>{b.disabled=true;if(i===idx)b.classList.add(ok?'correct':'wrong');if(!ok&&b.textContent===correctText)b.classList.add('correct');});if(ok){session.correct++;addXP(5);}else{session.wrong++;}setTimeout(()=>{session.idx++;renderSession();},900);}
+function checkWrite(correct){const inp=document.getElementById('write-inp');if(!inp)return;const val=inp.value.trim().toLowerCase();const ok=val===correct.toLowerCase()||val===correct.toLowerCase().replace(/\(.*?\)/g,'').trim();const fb=document.getElementById('write-fb');if(ok){if(fb)fb.innerHTML=`<div style="color:var(--success);font-weight:800">&#x2713; ${t('correct')}!</div>`;session.correct++;addXP(8);setTimeout(()=>{session.idx++;renderSession();},900);}else{if(fb)fb.innerHTML=`<div style="color:var(--danger);font-weight:700">${t('correct_ans')} <strong>${correct}</strong></div>`;session.wrong++;setTimeout(()=>{session.idx++;renderSession();},1500);}}
+function showHint(correct){const fb=document.getElementById('write-fb');if(fb)fb.innerHTML=`<div style="color:var(--warning);font-weight:700">${t('hint')}: ${correct.substring(0,Math.ceil(correct.length/2))}\u2026</div>`;}
+function renderSessionResults(){
+  const total=session.cards.length,xpE=session.correct*5,pct=Math.round(session.correct/total*100);
+  const emoji=pct>=80?'\ud83c\udfc6':pct>=50?'\ud83d\ude0a':'\ud83d\udcd6';
+  document.getElementById('views').innerHTML=`<div class="view result-screen"><div class="result-emoji">${emoji}</div><div class="result-title">${t('session_done')}</div><div class="result-stats"><div class="result-stat"><div class="result-stat-val" style="color:var(--success)">${session.correct}</div><div class="result-stat-lbl">${t('correct')}</div></div><div class="result-stat"><div class="result-stat-val" style="color:var(--text3)">${total}</div><div class="result-stat-lbl">${t('total')}</div></div><div class="result-stat"><div class="result-stat-val" style="color:var(--danger)">${session.wrong}</div><div class="result-stat-lbl">${t('wrong')}</div></div></div><div class="xp-earned">+${xpE} ${t('xp_earned')}</div><div class="row" style="margin-top:16px"><button class="btn btn-ghost" style="flex:1" onclick="startVocabSession()">${t('play_again')}</button><button class="btn btn-primary" style="flex:1" onclick="navigate('home')">${t('go_home')}</button></div></div>`;
+}
+
+async function runAIGen(){
+  const inp=document.getElementById('ai-gen-inp');const topic=inp?.value?.trim();if(!topic)return;
+  if(!S.claudeKey){showToast(t('no_key'));return;}
+  const btn=document.getElementById('ai-gen-btn'),lbl=document.getElementById('ai-gen-label');
+  if(btn)btn.disabled=true;if(lbl)lbl.textContent=t('generating');
+  const res=document.getElementById('ai-gen-result');if(res)res.innerHTML=`<div class="loading-row"><div class="spinner"></div></div>`;
+  try{
+    const data=await callClaude([{role:'user',content:`Generate exactly 8 vocabulary triplets for topic "${topic}" at ${S.level} level. Return ONLY JSON array: [{"de":"...","en":"...","ru":"..."},...] No markdown.`}]);
+    const text=data.content.map(b=>b.text||'').join('');
+    const pairs=JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(res)res.innerHTML=`<div style="color:var(--accent);font-size:13px;font-weight:800;margin-bottom:6px">&#x2713; ${pairs.length} ${t('words_lbl')} generiert</div>`+pairs.map(p=>`<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;display:flex;gap:6px"><span style="color:var(--primary)">${flag('de')} ${p.de}</span><span style="color:var(--text3)">\u00b7</span><span style="color:var(--accent-dark)">${flag('en')} ${p.en}</span><span style="color:var(--text3)">\u00b7</span><span style="color:var(--text2)">${flag('ru')} ${p.ru}</span></div>`).join('');
+    const maxId=Math.max(...VOCAB.map(v=>v[0]));pairs.forEach((p,i)=>VOCAB.push([maxId+i+1,topic.toLowerCase(),S.level,p.de,p.en,p.ru]));
+    addXP(10);
+  }catch(e){if(res)res.innerHTML=`<div style="color:var(--danger);font-size:13px">Error: ${e.message}</div>`;}
+  if(btn)btn.disabled=false;if(lbl)lbl.textContent=t('gen_btn');
+}
+
+function renderGrammar(){
+  const levels=['A1','A2','B1','B2','C1','C2'];
+  const lessons=(GRAMMAR_DB[S.learnTo]||GRAMMAR_DB.de)[S.level]||[];
+  return `<div class="view"><div class="view-title">${t('grammar_title')}</div><div class="view-sub">${flag(S.learnTo)} ${langLabel(S.learnTo)}</div><div class="tabs">${levels.map(lv=>`<button class="tab${S.level===lv?' active':''}" onclick="setGramLevel('${lv}')">${lv}</button>`).join('')}</div>${lessons.length===0?`<div style="text-align:center;padding:40px;color:var(--text3);font-weight:600">Coming soon \u2026</div>`:lessons.map(l=>`<div class="grammar-lesson"><div class="grammar-lesson-header" onclick="toggleLesson('${l.id}')"><div class="grammar-lesson-title">${l.title[S.uiLang]||l.title.de}</div><div id="arr-${l.id}" style="font-size:18px;color:var(--text3);transition:.3s">&#x203A;</div></div><div class="grammar-lesson-body" id="body-${l.id}">${l.content[S.uiLang]||l.content.de}<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="askAIGrammar('${l.id}')">&#x1F916; ${t('ask_ai')}</button><div id="ai-g-${l.id}" style="margin-top:8px"></div></div></div>`).join('')}</div>`;
+}
+function setGramLevel(lv){S.level=lv;saveState();renderView('grammar');}
+function toggleLesson(id){const b=document.getElementById('body-'+id),a=document.getElementById('arr-'+id);if(b){b.classList.toggle('open');if(a)a.style.transform=b.classList.contains('open')?'rotate(90deg)':'';}}
+async function askAIGrammar(id){
+  if(!S.claudeKey){showToast(t('no_key'));return;}
+  const el=document.getElementById('ai-g-'+id);if(!el)return;
+  el.innerHTML=`<div class="loading-row"><div class="spinner"></div></div>`;
+  const all=Object.values(GRAMMAR_DB).flatMap(l=>Object.values(l).flat());
+  const title=all.find(l=>l.id===id)?.title?.[S.uiLang]||id;
+  try{
+    const data=await callClaude([{role:'user',content:`Explain grammar topic "${title}" in ${langLabel(S.uiLang)} with 2 practical examples. Max 80 words.`}]);
+    el.innerHTML=`<div class="grammar-tip" style="background:var(--primary-xlight);border-left-color:var(--accent);color:var(--text2)">&#x1F916; ${data.content.map(b=>b.text||'').join('').trim()}</div>`;
+  }catch(e){el.innerHTML=`<div style="color:var(--danger);font-size:13px">${e.message}</div>`;}
+}
+
+function renderTranslate(){
+  const L=['de','en','ru'];
+  return `<div class="view"><div class="view-title">${t('tr_title')}</div><div class="lang-switch"><div class="lang-select-wrap"><select class="inp" id="tr-from">${L.map(l=>`<option value="${l}" ${S.learnFrom===l?'selected':''}>${flag(l)} ${langLabel(l)}</option>`).join('')}</select></div><div class="swap-btn" onclick="swapTrLangs()">&#x21C4;</div><div class="lang-select-wrap"><select class="inp" id="tr-to">${L.map(l=>`<option value="${l}" ${S.learnTo===l?'selected':''}>${flag(l)} ${langLabel(l)}</option>`).join('')}</select></div></div><div class="input-group"><textarea class="inp" id="tr-input" placeholder="${t('enter_text')}" rows="4"></textarea></div><button class="btn btn-primary btn-full" id="tr-btn" onclick="doTranslate()">&#x1F310; ${t('translate')}</button><div id="tr-result" style="margin-top:14px"></div></div>`;
+}
+function afterTranslate(){document.getElementById('tr-input')?.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter')doTranslate();});}
+function swapTrLangs(){const f=document.getElementById('tr-from'),tt=document.getElementById('tr-to');if(!f||!tt)return;[f.value,tt.value]=[tt.value,f.value];S.learnFrom=f.value;S.learnTo=tt.value;saveState();}
+async function doTranslate(){
+  const inp=document.getElementById('tr-input')?.value?.trim();if(!inp)return;
+  const from=document.getElementById('tr-from')?.value||S.learnFrom;
+  const to=document.getElementById('tr-to')?.value||S.learnTo;
+  const rEl=document.getElementById('tr-result');if(!rEl)return;
+  const btn=document.getElementById('tr-btn');if(btn)btn.disabled=true;
+  rEl.innerHTML=`<div class="loading-row"><div class="spinner"></div></div>`;
+  let result='',provider='ai';
+  try{
+    if(!S.claudeKey)throw new Error('no_key');
+    const data=await callClaude([{role:'user',content:`Translate from ${langLabel(from)} to ${langLabel(to)}. Return ONLY the translation:\n\n${inp}`}]);
+    result=data.content.map(b=>b.text||'').join('').trim();
+  }catch(e){
+    if(S.deeplKey){try{result=await deeplTr(inp,to,from);provider='deepl';}catch(e2){rEl.innerHTML=`<div style="color:var(--danger);padding:12px">${e2.message}</div>`;if(btn)btn.disabled=false;return;}}
+    else{rEl.innerHTML=`<div style="color:var(--danger);padding:12px">${t('no_key')}</div>`;if(btn)btn.disabled=false;return;}
+  }
+  const rSafe=result.replace(/'/g,"\\'").replace(/\n/g,' ');
+  rEl.innerHTML=`<div class="translation-box"><button class="copy-btn" onclick="copyTxt('${rSafe}')">&#x1F4CB;</button><div class="translation-text">${result.replace(/\n/g,'<br>')}</div><div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="provider-badge">${provider==='ai'?'&#x1F916; '+t('by_ai'):'&#x1F535; '+t('by_deepl')}</span><button class="tts-btn" onclick="speakWord('${rSafe}','${to}')">&#x1F50A;</button></div></div>`;
+  if(btn)btn.disabled=false;addXP(2);
+}
+async function deeplTr(text,to,from){
+  const lm={de:'DE',en:'EN-GB',ru:'RU'};
+  const r=await fetch('https://api-free.deepl.com/v2/translate',{method:'POST',headers:{'Authorization':`DeepL-Auth-Key ${S.deeplKey}`,'Content-Type':'application/json'},body:JSON.stringify({text:[text],target_lang:lm[to]||to.toUpperCase(),source_lang:from.toUpperCase()})});
+  if(!r.ok)throw new Error('DeepL '+r.status);
+  return(await r.json()).translations?.[0]?.text||'';
+}
+function copyTxt(t2){navigator.clipboard?.writeText(t2).then(()=>showToast('Kopiert &#x2713;'));}
+
+let recognition=null,speechMode='conversation';
+function renderSpeech(){
+  return `<div class="view"><div class="view-title">${t('speech_title')}</div><div class="tabs"><button class="tab${speechMode==='conversation'?' active':''}" onclick="setSpeechMode('conversation')">${t('conversation')}</button><button class="tab${speechMode==='pronunciation'?' active':''}" onclick="setSpeechMode('pronunciation')">${t('pronunciation')}</button></div>${speechMode==='conversation'?renderConvMode():renderPronMode()}</div>`;
+}
+function renderConvMode(){
+  const msgs=S.chatMessages;
+  return `<div class="chat-messages" id="chat-msgs">${msgs.length===0?`<div style="text-align:center;padding:28px;color:var(--text3);font-weight:600"><div style="font-size:40px;margin-bottom:8px">&#x1F916;</div>${t('speak_prompt')} ${flag(S.learnTo)} ${langLabel(S.learnTo)}</div>`:''}${msgs.map(m=>`<div class="msg ${m.role}"><div class="msg-avatar ${m.role}">${m.role==='ai'?'AI':'&#x1F464;'}</div><div><div class="msg-bubble">${m.text}</div>${m.correction?`<div class="msg-correction">&#x270F; ${m.correction}</div>`:''}</div></div>`).join('')}<div id="chat-typing" style="display:none"><div class="msg ai"><div class="msg-avatar ai">AI</div><div class="msg-bubble"><div class="spinner" style="width:14px;height:14px"></div></div></div></div></div><div class="chat-input-row"><textarea class="inp" id="chat-inp" placeholder="${t('enter_text')}" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><div class="rec-btn" id="rec-btn" onclick="toggleRec()">&#x1F3A4;</div><button class="btn btn-primary btn-sm" onclick="sendChat()">&#x2192;</button></div><div class="rec-status" id="rec-status"></div>`;
+}
+function renderPronMode(){
+  const LI=['de','en','ru'],ti=LI.indexOf(S.learnTo);
+  const pool=VOCAB.filter(v=>v[2]===S.level);
+  const word=pool.length?pool[Math.floor(Math.random()*Math.min(pool.length,50))][3+ti]:'Hallo';
+  const wS=word.replace(/'/g,"\\'");
+  return `<div style="text-align:center"><div class="card" style="padding:28px;margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;margin-bottom:12px">${flag(S.learnTo)} ${langLabel(S.learnTo)}</div><div style="font-size:30px;font-weight:900;margin-bottom:16px">${word}</div><button class="btn btn-primary" onclick="speakWord('${wS}','${S.learnTo}')">&#x1F50A; H\u00f6ren</button></div><div class="rec-btn" style="margin:0 auto;width:64px;height:64px;font-size:28px" id="rec-btn" onclick="toggleRec()">&#x1F3A4;</div><div class="rec-status" id="rec-status" style="margin-top:10px"></div><div id="pron-fb" style="margin-top:14px"></div><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="renderView('speech')">&#x1F504; ${t('next')}</button></div>`;
+}
+function afterSpeech(){scrollChat();}
+function setSpeechMode(m){speechMode=m;renderView('speech');}
+function scrollChat(){const el=document.getElementById('chat-msgs');if(el)el.scrollTop=el.scrollHeight;}
+async function sendChat(){
+  const inp=document.getElementById('chat-inp');const text=inp?.value?.trim();if(!text)return;
+  if(!S.claudeKey){showToast(t('no_key'));return;}
+  inp.value='';S.chatMessages.push({role:'user',text});renderView('speech');scrollChat();
+  const typ=document.getElementById('chat-typing');if(typ)typ.style.display='block';
+  const sys=`You are a friendly language teacher. User learns ${langLabel(S.learnTo)} from ${langLabel(S.learnFrom)}. Respond in ${langLabel(S.learnTo)} (short ${langLabel(S.uiLang)} translation in parentheses). Note grammar mistakes with "Correction:". Keep responses to 2-3 sentences. Be encouraging.`;
+  try{
+    const data=await callClaude(S.chatMessages.map(m=>({role:m.role==='ai'?'assistant':'user',content:m.text})),sys);
+    const resp=data.content.map(b=>b.text||'').join('').trim();
+    let main=resp,cor=null;
+    if(resp.includes('Correction:')){const p=resp.split('Correction:');main=p[0].trim();cor='Correction:'+p[1];}
+    S.chatMessages.push({role:'ai',text:main,correction:cor});saveState();renderView('speech');scrollChat();
+    speakWord(main,S.learnTo);addXP(8);
+  }catch(e){S.chatMessages.push({role:'ai',text:'\u26a0\ufe0f '+e.message});renderView('speech');}
+}
+function toggleRec(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('Speech Recognition not supported.');return;}
+  if(recognition){recognition.stop();recognition=null;return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;recognition=new SR();recognition.lang=LANGS[S.learnTo]?.tts||'de-DE';recognition.continuous=false;recognition.interimResults=false;
+  const b=document.getElementById('rec-btn');if(b){b.classList.add('recording');b.innerHTML='&#x23F9;';}
+  const st=document.getElementById('rec-status');if(st)st.textContent='\ud83d\udd34 ...';
+  recognition.onresult=e=>{const text=e.results[0][0].transcript;if(speechMode==='conversation'){const i=document.getElementById('chat-inp');if(i){i.value=text;sendChat();}}else{const fb=document.getElementById('pron-fb');if(fb)fb.innerHTML=`<div class="card" style="text-align:center;padding:16px;font-weight:700">"${text}"</div>`;}};
+  recognition.onerror=recognition.onend=()=>{recognition=null;const b2=document.getElementById('rec-btn');if(b2){b2.classList.remove('recording');b2.innerHTML='\ud83c\udfa4';}const st2=document.getElementById('rec-status');if(st2)st2.textContent='';};
+  recognition.start();
+}
+
+function renderSettings(){
+  const L=['de','en','ru'],LV=['A1','A2','B1','B2','C1','C2'];
+  const isGemini=S.aiProvider==='gemini';
+  const providerCards=[
+    {id:'claude',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>',label:'Claude',sub:'Anthropic · claude-sonnet-4-6'},
+    {id:'gemini',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',label:'Gemini',sub:'Google · gemini-2.0-flash'}
+  ];
+  return `<div class="view"><div class="view-title">${t('settings_title')}</div>
+
+    <div class="settings-section"><div class="settings-section-title">&#x1F30D; ${t('learndir')}</div><div class="card">
+      <div class="input-group"><label class="input-label">${t('ui_lang')}</label><select class="inp" onchange="applyUILang(this.value)">${L.map(l=>`<option value="${l}" ${S.uiLang===l?'selected':''}>${flag(l)} ${LANGS[l].label[S.uiLang]}</option>`).join('')}</select></div>
+      <div class="input-group"><label class="input-label">${t('learn_from')}</label><select class="inp" onchange="S.learnFrom=this.value;saveState()">${L.map(l=>`<option value="${l}" ${S.learnFrom===l?'selected':''}>${flag(l)} ${langLabel(l)}</option>`).join('')}</select></div>
+      <div class="input-group"><label class="input-label">${t('learn_to')}</label><select class="inp" onchange="S.learnTo=this.value;saveState()">${L.map(l=>`<option value="${l}" ${S.learnTo===l?'selected':''}>${flag(l)} ${langLabel(l)}</option>`).join('')}</select></div>
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">${t('level_select')}</label><select class="inp" onchange="S.level=this.value;saveState()">${LV.map(lv=>`<option value="${lv}" ${S.level===lv?'selected':''}>${lv}</option>`).join('')}</select></div>
+    </div></div>
+
+    <div class="settings-section"><div class="settings-section-title">&#x1F916; KI-Anbieter</div>
+      <div class="row" style="margin-bottom:14px">${providerCards.map(p=>{const active=S.aiProvider===p.id;return`<div class="card" style="cursor:pointer;border:2px solid ${active?'var(--primary)':'var(--border)'};background:${active?'var(--primary-xlight)':'var(--surface)'};text-align:center;padding:14px 10px" onclick="setAIProvider('${p.id}')"><div style="color:${active?'var(--primary)':'var(--text3)'};display:flex;justify-content:center;margin-bottom:6px">${p.icon}</div><div style="font-size:14px;font-weight:900;color:${active?'var(--primary)':'var(--text)'}">${p.label}</div><div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:3px">${p.sub}</div>${active?`<div style="margin-top:6px;font-size:10px;background:var(--primary);color:#fff;border-radius:6px;padding:2px 8px;display:inline-block;font-weight:800">AKTIV</div>`:''}</div>`;}).join('')}</div>
+
+      <div class="card">
+        ${isGemini?`
+        <div class="input-label" style="display:flex;align-items:center;gap:6px"><span style="color:#4285F4;font-weight:900">G</span> Gemini API-Schlüssel</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Kostenlos unter <strong>aistudio.google.com</strong></div>
+        <div class="api-key-wrap"><input class="inp" type="password" id="set-gk" value="${S.geminiKey}" placeholder="AIza\u2026"><button class="key-visible-btn" onclick="toggleKV('set-gk')">&#x1F441;</button></div>
+        <button class="btn btn-accent btn-sm" style="margin-top:8px;width:auto" onclick="saveGK()">&#x2713; ${t('save')}</button>
+        `:
+        `<div class="input-label" style="display:flex;align-items:center;gap:6px"><span style="color:var(--primary);font-size:16px">&#x25CB;</span> ${t('claude_key')}</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Unter <strong>console.anthropic.com</strong></div>
+        <div class="api-key-wrap"><input class="inp" type="password" id="set-ck" value="${S.claudeKey}" placeholder="sk-ant-\u2026"><button class="key-visible-btn" onclick="toggleKV('set-ck')">&#x1F441;</button></div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:auto" onclick="saveCK()">&#x2713; ${t('save')}</button>`}
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px"></div>
+        <div class="input-label">&#x1F535; ${t('deepl_key')} <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div>
+        <div class="api-key-wrap"><input class="inp" type="password" id="set-dk" value="${S.deeplKey}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx"><button class="key-visible-btn" onclick="toggleKV('set-dk')">&#x1F441;</button></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:auto" onclick="saveDK()">&#x2713; ${t('save')}</button>
+      </div>
+    </div>
+
+    <div class="settings-section"><div class="settings-section-title">&#x1F50A; ${t('spd')}</div><div class="card">
+      <div class="slider-wrap"><span class="slider-label">${t('slow')}</span><input type="range" min="0.5" max="2.0" step="0.1" value="${S.speechRate}" oninput="S.speechRate=parseFloat(this.value);saveState();document.getElementById('spd-v').textContent=parseFloat(this.value).toFixed(1)+'x'"><span class="slider-label">${t('fast')}</span></div>
+      <div style="text-align:center;margin-top:6px;font-size:14px;font-weight:800;color:var(--primary)" id="spd-v">${S.speechRate.toFixed(1)}x</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="speakWord('Hallo, ich bin Semanteq!','de')">&#x1F50A; Test</button>
+    </div></div>
+
+    <div class="settings-section"><div class="settings-section-title">&#x2699;&#xFE0F; App</div><div class="card">
+      <div class="settings-row"><div><div class="settings-row-label">&#x1F504; ${t('chk_upd')}</div><div class="settings-row-sub">${t('version')} ${BUILD.version} &nbsp;&middot;&nbsp; ${BUILD.date}</div></div><button class="btn btn-ghost btn-sm" onclick="hardRefresh()">Update</button></div>
+      <div class="settings-row"><div><div class="settings-row-label">${t('reset_prog')}</div><div class="settings-row-sub">XP &middot; Streak &middot; Fortschritt</div></div><button class="btn btn-danger btn-sm" onclick="confirmReset()">&#x1F5D1;</button></div>
+    </div></div>
+
+    <div class="app-footer">${BUILD.dev}<br>${t('version')} ${BUILD.version} &nbsp;&middot;&nbsp; ${BUILD.date}<br>${VOCAB.length} W\u00f6rter &middot; ${Object.keys(TOPIC_LABELS).length} Themen &middot; KI: ${S.aiProvider==='gemini'?'Gemini 2.0 Flash':'Claude Sonnet 4.6'}</div>
+  </div>`;
+}
+function setAIProvider(p){S.aiProvider=p;saveState();renderView('settings');}
+function saveGK(){S.geminiKey=document.getElementById('set-gk')?.value||'';saveState();showToast(t('saved'));}
+function hardRefresh(){showToast('Lade neu \u2026');setTimeout(()=>{const url=location.href.split('?')[0]+'?v='+Date.now();location.replace(url);},400);}
+function toggleKV(id){const i=document.getElementById(id);if(i)i.type=i.type==='password'?'text':'password';}
+function saveCK(){S.claudeKey=document.getElementById('set-ck')?.value||'';saveState();showToast(t('saved'));}
+function saveDK(){S.deeplKey=document.getElementById('set-dk')?.value||'';saveState();showToast(t('saved'));}
+function applyUILang(lc){S.uiLang=lc;saveState();updateI18n();renderView('settings');}
+function confirmReset(){openModal(`<div class="modal-title">&#x26A0;&#xFE0F; ${t('confirm_reset')}</div><div style="color:var(--text3);font-size:14px;margin-bottom:8px">XP: ${S.xp} \u00b7 Streak: ${S.streak}</div><div class="modal-actions"><button class="btn btn-ghost" onclick="forceCloseModal()">${t('cancel')}</button><button class="btn btn-danger" onclick="doReset()">${t('yes')}</button></div>`);}
+function doReset(){S.progress={};S.xp=0;S.streak=0;S.dailyDone=0;S.chatMessages=[];saveState();forceCloseModal();showToast('Reset &#x2713;');navigate('home');}
+
+function speakWord(text,langCode){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=LANGS[langCode]?.tts||langCode;u.rate=S.speechRate||1.0;window.speechSynthesis.speak(u);}
+
+async function callClaude(messages,system=''){
+  if(S.aiProvider==='gemini') return callGemini(messages,system);
+  if(!S.claudeKey)throw new Error(t('no_key'));
+  const body={model:'claude-sonnet-4-6',max_tokens:1000,messages};if(system)body.system=system;
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+r.status);}
+  return r.json();
+}
+async function callGemini(messages,system=''){
+  if(!S.geminiKey)throw new Error(t('no_key'));
+  const model='gemini-2.0-flash';
+  const contents=messages.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+  const body={contents};
+  if(system)body.systemInstruction={parts:[{text:system}]};
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${S.geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'Gemini error '+r.status);}
+  const d=await r.json();
+  const text=d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  return {content:[{type:'text',text}]};
+}
+
+function checkStreak(){const now=new Date(),today=now.toDateString(),yesterday=new Date(now-86400000).toDateString();if(S.lastActivity===today)return;S.streak=(S.lastActivity===yesterday)?S.streak+1:1;S.lastActivity=today;S.dailyDone=0;saveState();}
+
+(function pwa(){try{const m={name:'Semanteq',short_name:'Semanteq',start_url:'.',display:'standalone',background_color:'#EDF5FF',theme_color:'#1B6AF0',icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231B6AF0'/%3E%3Ctext y='.85em' font-size='55' font-family='Arial' font-weight='900' fill='white' x='50%25' text-anchor='middle'%3ESq%3C/text%3E%3C/svg%3E",sizes:'192x192',type:'image/svg+xml'}]};const u=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));const l=document.createElement('link');l.rel='manifest';l.href=u;document.head.appendChild(l);}catch(e){}})();
+
+function init(){checkStreak();updateI18n();navigate('home');}
+init();
+</script>
+</body>
+</html>
