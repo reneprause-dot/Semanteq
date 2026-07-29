@@ -1635,7 +1635,7 @@ async function runAIGen(){
     if(res)res.innerHTML=`<div style="color:var(--accent);font-size:13px;font-weight:800;margin-bottom:6px">&#x2713; ${pairs.length} ${t('words_lbl')} generiert</div>`+pairs.map(p=>`<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;display:flex;gap:6px"><span style="color:var(--primary)">${flag('de')} ${p.de}</span><span style="color:var(--text3)">\u00b7</span><span style="color:var(--accent-dark)">${flag('en')} ${p.en}</span><span style="color:var(--text3)">\u00b7</span><span style="color:var(--text2)">${flag('ru')} ${p.ru}</span></div>`).join('');
     const maxId=Math.max(...VOCAB.map(v=>v[0]));pairs.forEach((p,i)=>VOCAB.push([maxId+i+1,topic.toLowerCase(),S.level,p.de,p.en,p.ru]));
     addXP(10);
-  }catch(e){if(res)res.innerHTML=`<div style="color:var(--danger);font-size:13px">Error: ${e.message}</div>`;}
+  }catch(e){if(res)res.innerHTML=`<div style="color:var(--danger);font-size:13px">${aiError(e)}</div>`;}
   if(btn)btn.disabled=false;if(lbl)lbl.textContent=t('gen_btn');
 }
 
@@ -1655,7 +1655,7 @@ async function askAIGrammar(id){
   try{
     const data=await callClaude([{role:'user',content:`Explain grammar topic "${title}" in ${langLabel(S.uiLang)} with 2 practical examples. Max 80 words.`}]);
     el.innerHTML=`<div class="grammar-tip" style="background:var(--primary-xlight);border-left-color:var(--accent);color:var(--text2)">&#x1F916; ${data.content.map(b=>b.text||'').join('').trim()}</div>`;
-  }catch(e){el.innerHTML=`<div style="color:var(--danger);font-size:13px">${e.message}</div>`;}
+  }catch(e){el.innerHTML=`<div style="color:var(--danger);font-size:13px">${aiError(e)}</div>`;}
 }
 
 function renderTranslate(){
@@ -1672,13 +1672,14 @@ async function doTranslate(){
   const btn=document.getElementById('tr-btn');if(btn)btn.disabled=true;
   rEl.innerHTML=`<div class="loading-row"><div class="spinner"></div></div>`;
   let result='',provider='ai';
+  const activeKey=S.aiProvider==='gemini'?S.geminiKey:S.claudeKey;
   try{
-    if(!S.claudeKey)throw new Error('no_key');
+    if(!activeKey)throw new Error('no_key');
     const data=await callClaude([{role:'user',content:`Translate from ${langLabel(from)} to ${langLabel(to)}. Return ONLY the translation:\n\n${inp}`}]);
     result=data.content.map(b=>b.text||'').join('').trim();
   }catch(e){
-    if(S.deeplKey){try{result=await deeplTr(inp,to,from);provider='deepl';}catch(e2){rEl.innerHTML=`<div style="color:var(--danger);padding:12px">${e2.message}</div>`;if(btn)btn.disabled=false;return;}}
-    else{rEl.innerHTML=`<div style="color:var(--danger);padding:12px">${t('no_key')}</div>`;if(btn)btn.disabled=false;return;}
+    if(S.deeplKey){try{result=await deeplTr(inp,to,from);provider='deepl';}catch(e2){rEl.innerHTML=`<div style="color:var(--danger);padding:12px">${aiError(e2)}</div>`;if(btn)btn.disabled=false;return;}}
+    else{rEl.innerHTML=`<div style="color:var(--danger);padding:12px">${aiError(e)}</div>`;if(btn)btn.disabled=false;return;}
   }
   const rSafe=result.replace(/'/g,"\\'").replace(/\n/g,' ');
   rEl.innerHTML=`<div class="translation-box"><button class="copy-btn" onclick="copyTxt('${rSafe}')">&#x1F4CB;</button><div class="translation-text">${result.replace(/\n/g,'<br>')}</div><div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="provider-badge">${provider==='ai'?'&#x1F916; '+t('by_ai'):'&#x1F535; '+t('by_deepl')}</span><button class="tts-btn" onclick="speakWord('${rSafe}','${to}')">&#x1F50A;</button></div></div>`;
@@ -1723,7 +1724,7 @@ async function sendChat(){
     if(resp.includes('Correction:')){const p=resp.split('Correction:');main=p[0].trim();cor='Correction:'+p[1];}
     S.chatMessages.push({role:'ai',text:main,correction:cor});saveState();renderView('speech');scrollChat();
     speakWord(main,S.learnTo);addXP(8);
-  }catch(e){S.chatMessages.push({role:'ai',text:'\u26a0\ufe0f '+e.message});renderView('speech');}
+  }catch(e){S.chatMessages.push({role:'ai',text:aiError(e)});renderView('speech');}
 }
 function toggleRec(){
   if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('Speech Recognition not supported.');return;}
@@ -1806,13 +1807,31 @@ function renderSettings(){
 function setAIProvider(p){S.aiProvider=p;saveState();renderView('settings');}
 function saveGK(){
   var el=document.getElementById('set-gk');
-  if(!el){showToast('Feld nicht gefunden');return;}
-  S.geminiKey=el.value.trim();saveState();showToast(t('saved'));
+  if(!el){showToast('\u26a0\ufe0f Feld nicht gefunden');return;}
+  var val=el.value.trim();
+  if(!val){showToast('\u26a0\ufe0f Bitte einen Schl\u00fcssel eingeben.');return;}
+  S.geminiKey=val;saveState();
+  showToast('\u2705 Gemini-Key gespeichert ('+val.length+' Zeichen)');
+  flashBtn('set-gk');
 }
+
 function hardRefresh(){showToast('Lade neu \u2026');setTimeout(function(){location.replace(location.href.split('?')[0]+'?v='+Date.now());},400);}
 function toggleKV(id){var i=document.getElementById(id);if(i)i.type=i.type==='password'?'text':'password';}
-function saveCK(){var el=document.getElementById('set-ck');if(!el){showToast('Feld nicht gefunden');return;}S.claudeKey=el.value.trim();saveState();showToast(t('saved'));}
-function saveDK(){var el=document.getElementById('set-dk');if(!el){showToast('Feld nicht gefunden');return;}S.deeplKey=el.value.trim();saveState();showToast(t('saved'));}
+function saveCK(){
+  var el=document.getElementById('set-ck');
+  if(!el){showToast('\u26a0\ufe0f Feld nicht gefunden');return;}
+  var val=el.value.trim();
+  if(!val){showToast('\u26a0\ufe0f Bitte einen Schl\u00fcssel eingeben.');return;}
+  S.claudeKey=val;saveState();
+  showToast('\u2705 Claude-Key gespeichert ('+val.length+' Zeichen)',3000);
+}
+function saveDK(){
+  var el=document.getElementById('set-dk');
+  if(!el){showToast('\u26a0\ufe0f Feld nicht gefunden');return;}
+  var val=el.value.trim();
+  S.deeplKey=val;saveState();
+  showToast(val?'\u2705 DeepL-Key gespeichert':'\u2705 DeepL-Key gel\u00f6scht',3000);
+}
 function afterSettings(){
   var ck=document.getElementById('set-ck');if(ck&&S.claudeKey)ck.value=S.claudeKey;
   var gk=document.getElementById('set-gk');if(gk&&S.geminiKey)gk.value=S.geminiKey;
@@ -1822,6 +1841,15 @@ function applyUILang(lc){S.uiLang=lc;saveState();updateI18n();renderView('settin
 function confirmReset(){openModal(`<div class="modal-title">&#x26A0;&#xFE0F; ${t('confirm_reset')}</div><div style="color:var(--text3);font-size:14px;margin-bottom:8px">XP: ${S.xp} \u00b7 Streak: ${S.streak}</div><div class="modal-actions"><button class="btn btn-ghost" onclick="forceCloseModal()">${t('cancel')}</button><button class="btn btn-danger" onclick="doReset()">${t('yes')}</button></div>`);}
 function doReset(){S.progress={};S.xp=0;S.streak=0;S.dailyDone=0;S.chatMessages=[];saveState();forceCloseModal();showToast('Reset &#x2713;');navigate('home');}
 
+function aiError(e){
+  if(e.name==='TypeError'||e.message==='Failed to fetch'||e.message==='Load failed'||e.message==='NetworkError when attempting to fetch resource.'){
+    return '\u26a0\ufe0f Verbindungsfehler. M\u00f6gliche Ursachen: falscher API-Key, kein Internet, Ad-Blocker blockiert die API.';
+  }
+  if(e.message==='no_key'||e.message.includes('no_key')){
+    return '\u26a0\ufe0f Kein API-Schl\u00fcssel \u2014 bitte in den Einstellungen eintragen.';
+  }
+  return '\u26a0\ufe0f '+e.message;
+}
 function speakWord(text,langCode){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=LANGS[langCode]?.tts||langCode;u.rate=S.speechRate||1.0;window.speechSynthesis.speak(u);}
 
 async function callClaude(messages,system=''){
