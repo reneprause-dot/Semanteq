@@ -1842,32 +1842,69 @@ function confirmReset(){openModal(`<div class="modal-title">&#x26A0;&#xFE0F; ${t
 function doReset(){S.progress={};S.xp=0;S.streak=0;S.dailyDone=0;S.chatMessages=[];saveState();forceCloseModal();showToast('Reset &#x2713;');navigate('home');}
 
 function aiError(e){
-  if(e.name==='TypeError'||e.message==='Failed to fetch'||e.message==='Load failed'||e.message==='NetworkError when attempting to fetch resource.'){
-    return '\u26a0\ufe0f Verbindungsfehler. M\u00f6gliche Ursachen: falscher API-Key, kein Internet, Ad-Blocker blockiert die API.';
-  }
-  if(e.message==='no_key'||e.message.includes('no_key')){
-    return '\u26a0\ufe0f Kein API-Schl\u00fcssel \u2014 bitte in den Einstellungen eintragen.';
-  }
-  return '\u26a0\ufe0f '+e.message;
+  var m=e.message||'';
+  if(m==='no_key') return '\u26a0\ufe0f Kein API-Schl\u00fcssel \u2014 bitte in den Einstellungen eintragen.';
+  if(m==='key_format_claude') return '\u26a0\ufe0f Ung\u00fcltiges Key-Format. Claude-Keys beginnen mit \u201esk-ant-\u201c \u2014 bitte in den Einstellungen pr\u00fcfen.';
+  if(m==='key_format_gemini') return '\u26a0\ufe0f Ung\u00fcltiges Key-Format. Gemini-Keys beginnen mit \u201eAIza\u201c \u2014 bitte in den Einstellungen pr\u00fcfen.';
+  if(m==='network') return '\u26a0\ufe0f Verbindung fehlgeschlagen. M\u00f6gliche Ursachen:\n\u2022 Kein oder schlechtes Internet\n\u2022 Ad-Blocker blockiert die API\n\u2022 Safari: Einstellungen \u2192 Datenschutz \u2192 Websitetracking deaktivieren';
+  if(m.includes('401')||m.toLowerCase().includes('invalid')||m.toLowerCase().includes('auth')) return '\u26a0\ufe0f API-Key abgelehnt (401) \u2014 Key pr\u00fcfen oder neu generieren.';
+  if(m.includes('429')) return '\u26a0\ufe0f Rate Limit erreicht. Kurz warten und erneut versuchen.';
+  if(m.includes('500')||m.includes('529')) return '\u26a0\ufe0f API-Server \u00fcberlastet. Bitte kurz warten.';
+  if(e.name==='TypeError'||m==='Failed to fetch'||m==='Load failed') return '\u26a0\ufe0f Verbindung fehlgeschlagen \u2014 Internet oder Ad-Blocker pr\u00fcfen.';
+  return '\u26a0\ufe0f '+m;
 }
 function speakWord(text,langCode){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=LANGS[langCode]?.tts||langCode;u.rate=S.speechRate||1.0;window.speechSynthesis.speak(u);}
 
 async function callClaude(messages,system=''){
   if(S.aiProvider==='gemini') return callGemini(messages,system);
-  if(!S.claudeKey)throw new Error(t('no_key'));
-  const body={model:'claude-sonnet-4-6',max_tokens:1000,messages};if(system)body.system=system;
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+r.status);}
+  if(!S.claudeKey) throw new Error('no_key');
+  if(!S.claudeKey.startsWith('sk-ant-')) throw new Error('key_format_claude');
+  const body={model:'claude-sonnet-4-6',max_tokens:1000,messages};
+  if(system) body.system=system;
+  let r;
+  try{
+    r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      mode:'cors',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':S.claudeKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify(body)
+    });
+  }catch(netErr){
+    throw new Error('network');
+  }
+  if(!r.ok){
+    const e=await r.json().catch(()=>({}));
+    throw new Error(e.error?.message||'HTTP '+r.status);
+  }
   return r.json();
 }
 async function callGemini(messages,system=''){
-  if(!S.geminiKey)throw new Error(t('no_key'));
+  if(!S.geminiKey) throw new Error('no_key');
+  if(!S.geminiKey.startsWith('AIza')) throw new Error('key_format_gemini');
   const model='gemini-2.0-flash';
   const contents=messages.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
   const body={contents};
-  if(system)body.systemInstruction={parts:[{text:system}]};
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${S.geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'Gemini error '+r.status);}
+  if(system) body.systemInstruction={parts:[{text:system}]};
+  let r;
+  try{
+    r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(S.geminiKey),{
+      method:'POST',
+      mode:'cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+  }catch(netErr){
+    throw new Error('network');
+  }
+  if(!r.ok){
+    const e=await r.json().catch(()=>({}));
+    throw new Error(e.error?.message||'HTTP '+r.status);
+  }
   const d=await r.json();
   const text=d.candidates?.[0]?.content?.parts?.[0]?.text||'';
   return {content:[{type:'text',text}]};
